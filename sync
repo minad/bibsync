@@ -1,0 +1,799 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'shellwords'
+require 'nokogiri'
+require 'date'
+require 'optparse'
+require 'pathname'
+
+class Bibliography
+  include Enumerable
+
+  def initialize(file = nil)
+    @entries, @file = {}, file
+    parse(File.read(@file)) if @file && File.exists?(@file)
+    @dirty = false
+  end
+
+  def dirty?
+    @dirty
+  end
+
+  def dirty!
+    @dirty = true
+  end
+
+  def [](key)
+    @entries[key]
+  end
+
+  def delete(entry)
+    if @entries.include?(entry.key)
+      @entries.delete(entry.key)
+      entry.bibliography = nil
+      dirty!
+    end
+  end
+
+  def each(&block)
+    @entries.each_value(&block)
+  end
+
+  def save(file = nil)
+    if file
+      @file = file
+      @dirty = true
+    end
+
+    raise 'No filename given' unless @file
+    if @dirty
+      File.open("#{@file}.tmp", 'w') {|f| f.write(self) }
+      File.rename("#{@file}.tmp", @file)
+      @dirty = false
+      true
+    else
+      false
+    end
+  end
+
+  def <<(entry)
+    entry.bibliography = self
+    @entries[entry.key] = entry
+    dirty!
+  end
+
+  def parse(text)
+    until text.empty?
+      case text
+      when /\A(\s+|%[^\n]+\n)/
+        text = $'
+      else
+        entry = Entry.new
+        text = entry.parse(text)
+        entry.key ||= @entries.size
+        self << entry
+      end
+    end
+  end
+
+  def to_s
+    "% #{DateTime.now}\n% Encoding: UTF8\n\n" <<
+      @entries.values.join("\n") << "\n"
+  end
+
+  class RawValue < String; end
+
+  class Entry
+    include Enumerable
+
+    attr_accessor :key, :type, :bibliography
+
+    def self.parse(text)
+      entry = Entry.new
+      entry.parse(text)
+      entry
+    end
+
+    def initialize
+      @fields = {}
+    end
+
+    def [](key)
+      @fields[convert_key(key)]
+    end
+
+    def []=(key, value)
+      if value then
+        key = convert_key(key)
+        value = RawValue === value ? RawValue.new(value.to_s.strip) : value.to_s.strip
+        if @fields[key] != value || @fields[key].class != value.class
+          @fields[key] = value
+          dirty!
+        end
+      else
+        delete(key)
+      end
+    end
+
+    def delete(key)
+      key = convert_key(key)
+      if @fields.include?(key)
+        @fields.delete(key)
+        dirty!
+      end
+    end
+
+    def each(&block)
+      @fields.each(&block)
+    end
+
+    def comment?
+      type.to_s.downcase == 'comment'
+    end
+
+    def dirty!
+      bibliography.dirty! if bibliography
+    end
+
+    def to_s
+      s = "@#{type}{"
+      if comment?
+        s << self[:comment]
+      else
+        s << "#{key},\n" << to_a.map {|k,v| RawValue === v ? "  #{k} = #{v}" : "  #{k} = {#{v}}" }.join(",\n") << "\n"
+      end
+      s << "}\n"
+    end
+
+    def parse(text)
+      raise 'Unexpected token' if text !~ /\A\s*@(\w+)\s*\{/
+      self.type = $1
+      text = $'
+
+      if comment?
+        text, self[:comment] = parse_field(text)
+      else
+        raise 'Expected entry key' if text !~ /([^,]+),\s*/
+        self.key = $1.strip
+        text = $'
+
+        until text.empty?
+          case text
+          when /\A(\s+|%[^\n]+\n)/
+            text = $'
+          when /\A\s*(\w+)\s*=\s*/
+            text, key = $', $1
+            if text =~ /\A\{/
+              text, self[key] = parse_field(text)
+            else
+              text, value = parse_field(text)
+              self[key] = RawValue.new(value)
+            end
+          else
+            break
+          end
+        end
+      end
+
+      raise 'Expected closing }' unless text =~ /\A\s*\}/
+      $'
+    end
+
+    private
+
+    def parse_field(text)
+      value = ''
+      count = 0
+      until text.empty?
+        case text
+        when /\A\{/
+          text = $'
+          value << $& if count > 0
+          count += 1
+        when /\A\}/
+          break if count == 0
+          count -= 1
+          text = $'
+          value << $& if count > 0
+        when /\A,/
+          text = $'
+          break if count == 0
+          value << $&
+        when /\A[^\}\{,]+/
+          text = $'
+          value << $&
+        else
+          break
+        end
+      end
+
+      raise 'Expected closing }' if count != 0
+
+      return text, value
+    end
+
+    def convert_key(key)
+      key.to_s.downcase.to_sym
+    end
+  end
+end
+
+class Sync
+  Reset = "\e[0m"
+  Red = "\e[31m"
+  Yellow = "\e[33m"
+  Blue = "\e[36m"
+  FileTypes = %w(djvu pdf ps)
+  ArXivJournal = 'ArXiv e-prints'
+  SliceSize = 20
+
+  def initialize(args)
+    @args = args
+    @options = {}
+  end
+
+  def run
+    @opts = OptionParser.new(&method(:set_opts))
+    @opts.parse!(@args)
+    process
+    exit 0
+  rescue Exception => ex
+    raise ex if @options[:trace] || SystemExit === ex
+    $stderr.print "#{ex.class}: " if ex.class != RuntimeError
+    $stderr.puts ex.message
+    $stderr.puts '  Use --trace for backtrace.'
+    exit 1
+  end
+
+  private
+
+  def set_opts(opts)
+    opts.banner = "Usage: #{$0} [options] <directory>"
+
+    opts.on('-s', '--sync bibliography.bib', 'Synchronize bibliography') do |bib_file|
+      @options[:bib_file] = bib_file
+    end
+
+    opts.on('-v', '--versioncheck', 'Check for updated arXiv papers') do
+      @options[:version_check] = true
+    end
+
+    opts.on('-u', '--update', 'Update arXiv papers') do
+      @options[:update] = true
+    end
+
+    opts.on('-d', '--download url', 'Download arXiv paper') do |url|
+      (@options[:download] ||= []) << url
+    end
+
+    opts.on('-c', '--citations', 'Update citation count from citebase.org') do
+      @options[:citations] = true
+    end
+
+    opts.on('-j', '--jabref', 'Transform bibliography with JabRef') do
+      @options[:jabref] = true
+    end
+
+    opts.on('-m', '--citedbyme directory', 'Synchronize with my TeX files') do |dir|
+      @options[:citedbyme] = dir
+      unless File.directory?(dir)
+        puts "#{Red}#{dir} is not a directory#{Reset}"
+        exit
+      end
+    end
+
+    opts.on('-V', '--verbose', 'Verbose output') do
+      @options[:verbose] = true
+    end
+
+    opts.on('--trace', 'Show a full traceback on error') do
+      @options[:trace] = true
+    end
+
+    opts.on('-f', '--force', 'Force synchronization with arXiv and DOI') do
+      @options[:force_resync] = true
+    end
+
+    opts.on('-h', '--help', 'Display this help') do
+      puts opts
+      exit
+    end
+  end
+
+  def process
+    if @args.size != 1
+      puts @opts
+      exit
+    end
+
+    unless @options[:download] || @options[:bib_file]
+      puts "#{Red}Either --download or --sync must be given#{Reset}"
+      exit
+    end
+
+    @options[:bib_dir] = @args.first
+    unless File.directory?(@options[:bib_dir])
+      puts "#{Red}#{@options[:bib_dir]} is not a directory#{Reset}"
+      exit
+    end
+
+    arxiv_download if @options[:download]
+
+    if @options[:bib_file]
+      @bib = Bibliography.new(@options[:bib_file])
+      arxiv_version_check if @options[:version_check] || @options[:update]
+      synchronize_files
+      synchronize_arxiv_doi
+      find_my_citations if @options[:citedbyme]
+      count_citations if @options[:citations]
+      transform
+      jabref if @options[:jabref]
+      validate
+    end
+  end
+
+  def synchronize_files
+    message 'Synchronize with files'
+
+    @files = {}
+    Dir[File.join(@options[:bib_dir], "**/*.{#{FileTypes.join(',')}}")].sort.each do |file|
+      @files[File.basename(file)] = file
+    end
+
+    @files.each_key do |file|
+      key, type = split_filename(file)
+
+      unless entry = @bib[key]
+        info(key, 'New file')
+        entry = Bibliography::Entry.new
+        entry.key = key
+        @bib << entry
+      end
+
+      entry.type ||= :ARTICLE
+      entry[:file] = ":#{path_relative_to_bibliography(@files[file])}:#{type}" # description:path:type
+    end
+  end
+
+  def synchronize_arxiv_doi
+    message 'Synchronize with arXiv and DOI'
+
+    @bib.each do |entry|
+      next unless entry[:file]
+
+      description, file, type = entry[:file].split(':', 3)
+
+      if @options[:force_resync] || !(entry[:title] && entry[:author] && entry[:year])
+        if type == 'PDF' && !entry[:arxiv] && !entry[:doi]
+          debug(entry, 'Searching for arXiv or doi identifier in pdf file')
+          text = `pdftotext -f 1 -l 2 #{Shellwords.escape @files[file]} - 2>/dev/null`
+          entry[:arxiv] = $1 if text =~ /arXiv:\s*([\w\.\/\-]+)/
+          entry[:doi] = $1 if text =~ /doi:\s*([\w\.\/\-]+)/i
+        end
+
+        if !entry[:arxiv] && file =~ /^(\d+.\d+v\d+)\.\w+$/
+          debug(entry, 'Interpreting file name as arXiv identifier')
+          entry[:arxiv] = $1
+        end
+
+        if !entry[:doi] && file =~ /^(PhysRev.*?|RevModPhys.*?)\.\w+$/
+          debug(entry, 'Interpreting file name as doi identifier')
+          entry[:doi] = "10.1103/#{$1}"
+        end
+
+        if !entry[:arxiv] && entry[:doi]
+          begin
+            info(entry, 'Fetch missing arXiv identifier')
+            xml = fetch_xml("http://export.arxiv.org/api/query?search_query=doi:#{entry[:doi]}&max_results=1")
+            if xml.xpath('//entry/doi').map(&:content).first == entry[:doi]
+              id = xml.xpath('//entry/id').map(&:content).first
+              if id =~ %r{\Ahttp://arxiv.org/abs/(.+)\Z}
+              entry[:arxiv] = $1
+              end
+            end
+          rescue => ex
+            error(entry, "arXiv doi query failed - #{ex.message}")
+          end
+        end
+
+        unless entry[:arxiv] || entry[:doi]
+          warning(entry, 'No arXiv or doi identifier found')
+        end
+
+        if entry[:arxiv]
+          # Remove arxiv version from entry key
+          arxiv_entry_key_with_version = entry[:arxiv].sub(/^.*\//, '')
+          arxiv_entry_key = arxiv_id(entry).sub(/^.*\//, '')
+
+          if entry.key == arxiv_entry_key_with_version then
+            description, file, type = entry[:file].split(':', 3)
+
+            path = @files[file]
+            new_file = file.sub(arxiv_entry_key_with_version, arxiv_entry_key)
+            new_path = @files[file].sub(arxiv_entry_key_with_version, arxiv_entry_key)
+
+            if old_entry = @bib[arxiv_entry_key] then
+              # Existing entry found
+              @bib.delete(entry)
+              old_entry[:arxiv] =~ /v(\d+)$/
+              old_version = $1
+              entry[:arxiv] =~ /v(\d+)$/
+              new_version = $1
+              if old_version && new_version && old_version > new_version
+                info(old_entry, 'Not updating existing entry with older version')
+                File.delete(path)
+                @files.delete(file)
+                next
+              end
+              old_entry[:arxiv] = entry[:arxiv]
+              old_entry[:doi] = entry[:doi]
+              entry = old_entry
+              info(entry, 'Updating existing entry')
+            else
+              # This is a new entry
+              entry.key = arxiv_entry_key
+            end
+
+            File.rename(path, new_path)
+            @files.delete(file)
+            @files[new_file] = new_path
+            entry[:file] = ":#{path_relative_to_bibliography(new_path)}:#{type}" # description:path:type
+
+            save
+          end
+
+          begin
+            info(entry, 'Downloading arXiv metadata')
+            xml = fetch_xml("http://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:#{arxiv_id entry}&metadataPrefix=arXiv")
+            error = xml.xpath('//error').map(&:content).first
+            raise error if error
+
+            entry[:title] = xml.xpath('//arXiv/title').map(&:content).first
+            entry[:abstract] = xml.xpath('//arXiv/abstract').map(&:content).first
+            entry[:primaryclass] = xml.xpath('//arXiv/categories').map(&:content).first.split(/\s+/).first
+            entry[:author] = xml.xpath('//arXiv/authors/author').map do |author|
+              "{#{author.xpath('keyname').map(&:content).first}}, {#{author.xpath('forenames').map(&:content).first}}"
+            end.join(' and ')
+            entry[:journal] = ArXivJournal
+            entry[:eprint] = entry[:arxiv]
+            entry[:archiveprefix] = 'arXiv'
+            date = xml.xpath('//arXiv/updated').map(&:content).first || xml.xpath('//arXiv/created').map(&:content).first
+            date = Date.parse(date)
+            entry[:year] = date.year
+            entry[:month] = Bibliography::RawValue.new(%w(jan feb mar apr may jun jul aug sep oct nov dec)[date.month - 1])
+            doi = xml.xpath('//arXiv/doi').map(&:content).first
+            entry[:doi] = doi if doi
+            journal = xml.xpath('//arXiv/journal-ref').map(&:content).first
+            entry[:journal] = journal if journal
+            comments = xml.xpath('//arXiv/comments').map(&:content).first
+            entry[:comments] = comments if comments
+            entry[:url] = "http://arxiv.org/abs/#{entry[:arxiv]}"
+          rescue => ex
+            entry.delete(:arxiv)
+            error(entry, "arXiv download failed - #{ex.message}")
+          end
+        end
+
+        if entry[:doi]
+          begin
+            info(entry, 'Downloading doi.org metadata')
+            text = fetch("http://dx.doi.org/#{entry[:doi]}", 'Accept' => 'text/bibliography; style=bibtex')
+            raise text if text == 'Unknown DOI'
+            Bibliography::Entry.parse(text).each {|k, v| entry[k] = v }
+          rescue => ex
+            entry.delete(:doi)
+            error(entry, "doi download failed - #{ex.message}")
+          end
+        end
+      end
+
+      # Download aps abstracts
+      if !entry[:abstract] && entry[:doi] =~ /\A10\.1103\//
+        begin
+          info(entry, "Downloading APS abstract")
+          html = fetch_html("http://link.aps.org/doi/#{entry[:doi]}")
+          entry[:abstract] = html.css('.aps-abstractbox').map(&:content).first
+        rescue => ex
+          error(entry, "Abstract download failed - #{ex.message}")
+        end
+      end
+
+      save
+    end
+  end
+
+  def find_my_citations
+    message 'Find citations in my TeX files'
+
+    citedbyme = {}
+    Dir[File.join(@options[:citedbyme], '**/*.tex')].each do |file|
+      File.read(file).scan(/cite\{([^\}]+)\}/) do
+        $1.split(/\s*,\s*/).each do |key|
+          key.strip!
+          file = path_relative_to_bibliography(file)
+          debug(key, "Cited in #{file}")
+          (citedbyme[key] ||= []) << file
+        end
+      end
+    end
+
+    @bib.each do |entry|
+      next if entry.comment?
+      entry.delete(:citedbyme) unless citedbyme.include?(entry.key)
+    end
+
+    citedbyme.each do |key, files|
+      files = files.sort.uniq.join(';')
+      if @bib[key]
+        @bib[key][:citedbyme] = files
+      else
+        warning(key, "Cited in #{files} but not found in #{@options[:bib_file]}")
+      end
+    end
+
+    save
+  end
+
+  def transform
+    # Transform entries
+    @bib.each do |entry|
+      next if entry.comment?
+
+      if entry[:author]
+        entry[:author] = entry[:author].gsub(/\{(\w+)\}/, '\\1').gsub(/#/, ' and ')
+      end
+
+      if entry[:doi] && entry[:doi] =~ /(PhysRev|RevModPhys).*?\.(\d+)$/
+        entry[:publisher] ||= 'American Physical Society'
+        entry[:pages] ||= $2
+      end
+
+      if entry[:publisher] && entry[:publisher] =~ /American Physical Society/i
+        entry[:publisher] = 'American Physical Society'
+      end
+
+      if entry[:month]
+        entry[:month] = Bibliography::RawValue.new(entry[:month].downcase)
+      end
+
+      if entry[:journal]
+        if entry[:journal] =~ /EPL/
+          entry[:year] = $1 if entry[:journal] =~ /\((\d{4})\)/
+          entry[:pages] = $1 if entry[:journal] =~ / (\d{5,10})( |\Z)/
+          entry[:volume] = $1 if entry[:journal] =~ / (\d{2,4})( |\Z)/
+          entry[:journal] = 'Europhysics Letters'
+        end
+
+        if entry[:journal] =~ /(Phys\.|Physical) (Rev\.|Review) Lett[^ ]+ /
+          entry[:year] = $1 if entry[:journal] =~ /\((\d{4})\)/
+          entry[:pages] = $1 if entry[:journal] =~ / (\d{5,10})( |,|\Z)/
+          entry[:volume] = $1 if entry[:journal] =~ / (\d{2,4})( |,|\Z)/
+          entry[:journal] = 'Physical Review Letters'
+        end
+
+        if entry[:journal] =~ /(Phys\.|Physical) (Rev\.|Review) (\w) /
+          letter = $3
+          entry[:year] = $1 if entry[:journal] =~ /\((\d{4})\)/
+          entry[:pages] = $1 if entry[:journal] =~ / (\d{5,10})( |,|\Z)/
+          entry[:volume] = $1 if entry[:journal] =~ / (\d{2,4})( |,|\Z)/
+          entry[:journal] = "Physical Review #{letter}"
+        end
+
+        case entry[:journal]
+        when /\APhysical Review (\w)\Z/i
+          entry[:shortjournal] = "PR#{$1.upcase}"
+        when /\APhysical Review Letters\Z/i
+          entry[:shortjournal] = 'PRL'
+        when /\AReviews of Modern Physics\Z/i
+          entry[:shortjournal] = 'RMP'
+        when /\ANew Journal of Physics\Z/i
+          entry[:shortjournal] = 'NJP'
+        when /\A#{ArXivJournal}\Z/i
+          entry[:shortjournal] = 'arXiv'
+        when /\AEurophysics Letters\Z/i
+          entry[:shortjournal] = 'EPL'
+        else
+          entry[:shortjournal] = entry[:journal]
+        end
+      end
+    end
+
+    @bib.save
+  end
+
+  def save
+    transform if @bib.dirty?
+  end
+
+  def count_citations
+    message 'Update citation counts'
+    @bib.each do |entry|
+      next if entry.comment?
+
+      if entry[:arxiv]
+        begin
+          info(entry, 'Access citebase')
+          xml = fetch_xml("http://citebase.org/oai?verb=GetRecord&identifier=oai:arXiv.org:#{arxiv_id entry}&metadataPrefix=amf")
+          if error = xml.xpath('//error').first
+            error(entry, "citebase download failed - #{error.content}") if error['code'] != 'idDoesNotExist'
+          else
+            citations = xml.xpath('//isreferencedby').size
+            if citations > 0
+              info(entry, "#{citations} citations")
+              entry[:citations] = citations
+            end
+          end
+        rescue => ex
+          error(entry, "citebase query failed - #{ex.message}")
+        end
+      end
+      save
+    end
+  end
+
+  def validate
+    message 'Check validity'
+    titles, arxivs = {}, {}
+    @bib.each do |entry|
+      next if entry.comment?
+
+      warnings = []
+
+      unless FileTypes.any? {|type| @files.include?("#{entry.key}.#{type}") }
+        warnings << 'Missing file'
+      end
+
+      warnings += [:title, :author, :year, :abstract].reject {|k| entry[k] }.map {|k| "Missing #{k}" }
+
+      if entry[:file]
+        description, file, type = entry[:file].split(':', 3)
+        warnings << 'Invalid file' if split_filename(File.basename(file)).first != entry.key
+      end
+
+      if entry[:arxiv]
+        id = arxiv_id(entry)
+        if arxivs.include?(id)
+          warnings << "ArXiv duplicate of '#{arxivs[id]}'"
+        else
+          arxivs[id] = entry.key
+        end
+      end
+
+      if entry[:title]
+        if titles.include?(entry[:title])
+          warnings << "Title duplicate of '#{titles[entry[:title]]}'"
+        else
+          titles[entry[:title]] = entry.key
+        end
+      end
+
+      warning(entry, warnings.join(', ')) unless warnings.empty?
+    end
+  end
+
+  def arxiv_download
+    download_ids = []
+    urls = []
+
+    @options[:download].each do |url|
+      if url =~ %r{^http://arxiv.org/abs/(\d+\.\d+)$}
+        download_ids << $1
+      else
+        urls << url
+      end
+    end
+
+    unless urls.empty?
+      message 'Starting browser for non-arXiv urls'
+      urls.each do |url|
+        puts "Opening #{url}"
+        `xdg-open #{Shellwords.escape url}`
+      end
+    end
+
+    unless download_ids.empty?
+      message 'Downloading from arXiv'
+      download_ids.each_slice(SliceSize) do |ids|
+        begin
+          xml = fetch_xml("http://export.arxiv.org/api/query?id_list=#{ids.join(',')}&max_results=#{SliceSize}")
+          xml.xpath('//entry/id').map(&:content).each_with_index do |id, i|
+            id.gsub!('http://arxiv.org/abs/', '')
+            puts("arXiv download #{id}")
+            content = fetch("http://arxiv.org/pdf/#{id}")
+            File.open("#{@options[:bib_dir]}/#{id}.pdf", 'w') {|f| f.write(content) }
+          end
+        rescue => ex
+          puts("#{Red}arXiv query failed - #{ex.message}#{Reset}")
+        end
+      end
+    end
+  end
+
+  def arxiv_version_check
+    message 'Check for newer version on arXiv'
+    @bib.select {|e| e[:arxiv] }.each_slice(SliceSize) do |entry|
+      begin
+        xml = fetch_xml("http://export.arxiv.org/api/query?id_list=#{entry.map{|e| arxiv_id(e)}.join(',')}&max_results=#{SliceSize}")
+        xml.xpath('//entry/id').map(&:content).each_with_index do |id, i|
+          id.gsub!('http://arxiv.org/abs/', '')
+          if id != entry[i][:arxiv]
+            info(entry[i], "#{entry[i][:arxiv]} replaced by http://arxiv.org/pdf/#{id}")
+            if @options[:update]
+              content = fetch("http://arxiv.org/pdf/#{id}")
+              File.open("#{@options[:bib_dir]}/#{id}.pdf", 'w') {|f| f.write(content) }
+            end
+          end
+        end
+      rescue => ex
+        puts("#{Red}arXiv query failed - #{ex.message}#{Reset}")
+      end
+    end
+  end
+
+  def jabref
+    if File.read(@options[:bib_file], 80) !~ /JabRef/
+      message 'Transforming file with JabRef'
+      tmp_file = "#{@options[:bib_file]}.tmp.bib"
+      `jabref --nogui --import #{Shellwords.escape @options[:bib_file]} --output #{Shellwords.escape tmp_file} 2>&1 >/dev/null`
+      File.rename(tmp_file, @options[:bib_file]) if File.exists?(tmp_file)
+    end
+  end
+
+  def debug(key, message)
+    info(key, message) if @options[:verbose]
+  end
+
+  def info(key, message)
+    key = key.key if key.respond_to? :key
+    puts("#{key} : #{message}")
+  end
+
+  def warning(key, message)
+    key = key.key if key.respond_to? :key
+    puts("#{key} : #{Yellow}#{message}#{Reset}")
+  end
+
+  def error(key, message)
+    key = key.key if key.respond_to? :key
+    puts("#{key} : #{Red}#{message}#{Reset}")
+  end
+
+  def message(message)
+    puts("#{Blue}#{message}#{Reset}")
+  end
+
+  def fetch(url, headers = {})
+    # open(url, headers) {|f| f.read }
+    headers = headers.map {|k,v| '-H ' + Shellwords.escape("#{k}: #{v}") }.join(' ')
+    result = `curl --stderr - -S -s -L #{headers} #{Shellwords.escape url}`
+    raise result.chomp if $? != 0
+    result
+  end
+
+  def fetch_xml(url, headers = {})
+    xml = Nokogiri::XML(fetch(url, headers))
+    xml.remove_namespaces!
+    xml
+  end
+
+  def fetch_html(url, headers = {})
+    Nokogiri::HTML(fetch(url, headers))
+  end
+
+  def split_filename(file)
+    file =~ /^(.*?)\.(\w+)$/
+    return $1, $2.upcase
+  end
+
+  def path_relative_to_bibliography(path)
+    @bib_real_path ||= Pathname.new(File.dirname(@options[:bib_file])).realpath
+    Pathname.new(path).realpath.relative_path_from(@bib_real_path).to_s
+  end
+
+  def arxiv_id(entry)
+    entry[:arxiv] =~ /^(.*?)v\d+$/ ? $1 : entry[:arxiv]
+  end
+end
+
+Sync.new(ARGV).run

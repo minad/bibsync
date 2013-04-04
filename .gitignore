@@ -1,0 +1,6 @@
+*.swp
+*.gem
+Gemfile.lock
+.bundle
+.yardoc
+
