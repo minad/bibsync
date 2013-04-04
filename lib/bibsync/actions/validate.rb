@@ -10,7 +10,7 @@ module BibSync
 
       def run
         notice 'Check validity'
-        titles, arxivs = {}, {}
+        titles, arxivs, dois = {}, {}, {}
 
         @bib.each do |entry|
           next if entry.comment?
@@ -18,9 +18,11 @@ module BibSync
           w = []
 
           file = entry.file
-          w << 'Missing file' unless file && File.file?(file[:path])
 
-          w += [:title, :author, :year, :abstract].reject {|k| entry[k] }.map {|k| "Missing #{k}" }
+          missing = []
+          missing << :file unless file && File.file?(file[:path])
+          missing += [:title, :author, :year, :abstract].reject {|k| entry[k] }
+          w << "Missing #{missing.map(&:to_s).sort.join(', ')}" unless missing.empty?
 
           w << 'Invalid file' if split_filename(file[:name]).first != entry.key if file
 
@@ -33,6 +35,14 @@ module BibSync
             end
           end
 
+          if id = entry[:doi]
+            if dois.include?(id)
+              w << "DOI duplicate of '#{dois[id]}'"
+            else
+              dois[id] = entry.key
+            end
+          end
+
           if entry[:title]
             if titles.include?(entry[:title])
               w << "Title duplicate of '#{titles[entry[:title]]}'"
@@ -41,7 +51,7 @@ module BibSync
             end
           end
 
-          warning(w.join(', '), :key => entry) unless w.empty?
+          warning(w.join('; '), :key => entry) unless w.empty?
         end
       end
     end

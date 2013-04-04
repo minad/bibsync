@@ -48,13 +48,13 @@ module BibSync
       end
 
       def update_doi(entry)
-        info('Downloading doi.org metadata', :key => entry)
+        info('Downloading DOI metadata', :key => entry)
         text = fetch("http://dx.doi.org/#{entry[:doi]}", 'Accept' => 'text/bibliography; style=bibtex')
         raise text if text == 'Unknown DOI'
         Bibliography::Entry.parse(text).each {|k, v| entry[k] = v }
       rescue => ex
         entry.delete(:doi)
-        error('doi download failed', :key => entry, :ex => ex)
+        error('DOI download failed', :key => entry, :ex => ex)
       end
 
       # Rename arxiv file if key contains version
@@ -158,12 +158,12 @@ module BibSync
               end
             end
           rescue => ex
-            error('arXiv doi query failed', :ex => ex, :key => entry)
+            error('arXiv query by DOI failed', :ex => ex, :key => entry)
           end
         end
 
         unless entry[:arxiv] || entry[:doi]
-          warning('No arXiv or doi identifier found', :key => entry)
+          warning('No arXiv or DOI identifier found', :key => entry)
         end
       end
 

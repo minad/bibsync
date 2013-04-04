@@ -101,6 +101,11 @@ module BibSync
       actions << :Validate if @options[:bib]
       actions << :JabrefFormat if @options[:jabref]
 
+      if actions.empty?
+        puts "Please specify actions! See #{$0} --help"
+        exit
+      end
+
       actions.map {|a| Actions.const_get(a).new(@options) }.each {|a| a.run }
     end
   end
