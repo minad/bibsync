@@ -108,7 +108,7 @@ module BibSync
         entry[:author] = xml.xpath('//arXiv/authors/author').map do |author|
           "{#{author.xpath('keyname').map(&:content).first}}, {#{author.xpath('forenames').map(&:content).first}}"
         end.join(' and ')
-        entry[:journal] = ArXivJournal
+        entry[:journal] = 'ArXiv e-prints'
         entry[:eprint] = entry[:arxiv]
         entry[:archiveprefix] = 'arXiv'
         date = xml.xpath('//arXiv/updated').map(&:content).first || xml.xpath('//arXiv/created').map(&:content).first

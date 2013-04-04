@@ -1,7 +1,5 @@
 module BibSync
   module Utils
-    ArXivJournal = 'ArXiv e-prints'
-
     def split_filename(file)
       file =~ /^(.*?)\.(\w+)$/
       return $1, $2.upcase
@@ -38,8 +36,8 @@ module BibSync
       if arxiv
         arxiv = arxiv.sub(/^.*\//, '') unless opts[:prefix]
         arxiv = arxiv.sub(/v\d+$/, '') unless opts[:version]
-        arxiv
       end
+      arxiv
     end
   end
 end

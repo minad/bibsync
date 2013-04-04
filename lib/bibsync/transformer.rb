@@ -55,7 +55,7 @@ module BibSync
             entry[:shortjournal] = 'RMP'
           when /\ANew Journal of Physics\Z/i
             entry[:shortjournal] = 'NJP'
-          when /\A#{ArXivJournal}\Z/i
+          when /\AArXiv e-prints\Z/i
             entry[:shortjournal] = 'arXiv'
           when /\AEurophysics Letters\Z/i
             entry[:shortjournal] = 'EPL'
