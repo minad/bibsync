@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'bibsync/command'
+
+BibSync::Command.new(ARGV).run
