@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.date              = Date.today.to_s
   s.authors           = ['Daniel Mendler']
   s.email             = ['mail@daniel-mendler.de']
-  s.summary           = 'BibSync is a tool to synchronize scientific papers and bibtex bibliography files'
-  s.description       = 'BibSync is a tool to synchronize scientific papers and bibtex bibliography files'
+  s.summary           = 'BibSync is a tool to synchronize scientific papers and BibTeX bibliography files'
+  s.description       = 'BibSync is a tool to synchronize scientific papers and BibTeX bibliography files'
   s.homepage          = 'https://github.com/minad/bibsync'
   s.rubyforge_project = s.name
 
