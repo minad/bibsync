@@ -98,7 +98,7 @@ module BibSync
       actions << :CheckVersions if @options[:check_versions] || @options[:update]
       actions << :SynchronizeFiles << :SynchronizeMetadata if @options[:sync] || @options[:resync]
       actions << :FindMyCitations if @options[:citedbyme]
-      actions << :Validate
+      actions << :Validate if @options[:bib]
       actions << :JabrefFormat if @options[:jabref]
 
       actions.map {|a| Actions.const_get(a).new(@options) }.each {|a| a.run }
