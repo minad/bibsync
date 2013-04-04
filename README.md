@@ -11,6 +11,10 @@ for each task is better than one thing which tries to solve everything. If you u
 for browsing and tagging it is unnecessary to sort the papers into different subdirectories by hand.
 Just throw them all in one directory!
 
+__Note__: This tool is derived from a script which I used during my thesis. It worked
+quite well and reliable during that time. But be aware that I used Git for version control
+of the BibTex file. So any mistakes which might be made by this tool could be reverted.
+
 Features
 --------
 
@@ -60,6 +64,11 @@ Alternatives
 
 * Mendeley (Commercial, synchronizes with their server, limited disk space, bloated gui application)
 * Zotero (Firefox plugin, Open source)
+
+A better name?
+--------------
+
+If you have a suggestion for a better name, just let me know...
 
 Author
 ------
