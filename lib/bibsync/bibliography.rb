@@ -133,7 +133,7 @@ module BibSync
 
       def file=(file)
         raise 'No bibliography set' unless bibliography
-        file =~ /\.(\w+)$/
+        file =~ /\.(\w+)\Z/
         self[:file] = ":#{bibliography.relative_path(file)}:#{$1.upcase}" # JabRef file format "description:path:type"
         file
       end

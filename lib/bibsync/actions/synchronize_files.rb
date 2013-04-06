@@ -17,7 +17,7 @@ module BibSync
         files = {}
         Dir[File.join(@dir, "**/*.{#{FileTypes.join(',')}}")].sort.each do |file|
           name = File.basename(file)
-          key, type = split_filename(name)
+          key = name_without_ext(name)
           raise "Duplicate file #{name}" if files[key]
           files[key] = file
         end

@@ -1,8 +1,8 @@
 module BibSync
   module Utils
-    def split_filename(file)
-      file =~ /^(.*?)\.(\w+)$/
-      return $1, $2.upcase
+    def name_without_ext(file)
+      file =~ /\A(.*?)\.\w+\Z/
+      $1
     end
 
     def fetch(url, headers = {})
@@ -34,8 +34,8 @@ module BibSync
       raise unless opts.include?(:prefix) && opts.include?(:version)
       arxiv = arxiv[:arxiv] if Bibliography::Entry === arxiv
       if arxiv
-        arxiv = arxiv.sub(/^.*\//, '') unless opts[:prefix]
-        arxiv = arxiv.sub(/v\d+$/, '') unless opts[:version]
+        arxiv = arxiv.sub(/\A.*\//, '') unless opts[:prefix]
+        arxiv = arxiv.sub(/v\d+\Z/, '') unless opts[:version]
       end
       arxiv
     end
