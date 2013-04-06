@@ -117,6 +117,11 @@ describe BibSync::Bibliography do
   end
 
   describe '#<<' do
+    it 'must support adding an entry' do
+      entry = BibSync::Bibliography::Entry.new(key: 'test')
+      bib << entry
+      bib['test'].must_be_same_as entry
+    end
   end
 
   describe '#load' do

@@ -132,10 +132,15 @@ module BibSync
       end
 
       def key=(key)
-        raise 'Entry cannot be renamed' if bibliography
         key = key.to_s
         raise 'Key cannot be empty' if key.empty?
-        @key = key
+        if bib = bibliography
+          bib.delete(self)
+          @key = key
+          bib << self
+        else
+          @key = key
+        end
       end
 
       def type=(type)

@@ -80,9 +80,7 @@ module BibSync
           info('Updating existing entry', key: entry)
         else
           # This is a new entry
-          @bib.delete(entry)
           entry.key = key
-          @bib << entry
         end
 
         if file
