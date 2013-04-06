@@ -6,9 +6,8 @@ module BibSync
     attr_accessor :save_hook
 
     def initialize(file = nil)
-      @entries, @file = {}, file
-      parse(File.read(@file)) if @file && File.exists?(@file)
-      @dirty = false
+      @entries, @save_hook = {}, nil
+      load(file)
     end
 
     def dirty?
@@ -39,6 +38,13 @@ module BibSync
       end
     end
 
+    def clear
+      unless @entries.empty?
+        @entries.clear
+        dirty!
+      end
+    end
+
     def relative_path(file)
       raise 'No filename given' unless @file
       bibpath = Pathname.new(@file).realpath.parent
@@ -53,7 +59,7 @@ module BibSync
       if file
         @file = file
         @parent_path = nil
-        @dirty = true
+        dirty!
       end
 
       raise 'No filename given' unless @file
@@ -72,6 +78,18 @@ module BibSync
       entry.bibliography = self
       @entries[entry.key] = entry
       dirty!
+    end
+
+    def load(file)
+      parse(File.read(file)) if file && File.exists?(file)
+      @file = file
+      @dirty = false
+    end
+
+    def load!(file)
+      parse(File.read(file))
+      @file = file
+      @dirty = false
     end
 
     def parse(text)
