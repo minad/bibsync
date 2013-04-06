@@ -103,6 +103,14 @@ describe BibSync::Bibliography do
   end
 
   describe '#each' do
+    it 'must iterate over entries' do
+      found = false
+      bib.each do |entry|
+        entry.must_be_instance_of BibSync::Bibliography::Entry
+        found = true
+      end
+      found.must_equal true
+    end
   end
 
   describe '#save' do

@@ -118,15 +118,28 @@ module BibSync
     class Entry
       include Enumerable
 
-      attr_accessor :key, :type, :bibliography
+      attr_accessor :bibliography
+      attr_reader :key, :type
 
       def self.parse(text)
         Entry.new.tap {|e| e.parse(text) }
       end
 
       def initialize(fields = {})
-        @key = fields.delete(:key)
+        self.key = fields.delete(:key) if fields.include?(:key)
+        self.type = fields.delete(:type) if fields.include?(:type)
         @fields = fields
+      end
+
+      def key=(key)
+        raise 'Entry cannot be renamed' if bibliography
+        key = key.to_s
+        raise 'Key cannot be empty' if key.empty?
+        @key = key
+      end
+
+      def type=(type)
+        @type = type.upcase
       end
 
       def file=(file)
