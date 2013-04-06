@@ -2,13 +2,13 @@ BibSync
 =======
 
 BibSync is a tool to synchronize your paper database with a [BibTeX](http://en.wikipedia.org/wiki/BibTeX) file which might be most
-useful for Physicsts and Mathematicians since it supports synchronization with [DOI](http://dx.doi.org/) and [arXiv](http://arxiv.org/).
+useful for Physicists and Mathematicians since it supports synchronization with [DOI](http://dx.doi.org/) and [arXiv](http://arxiv.org/).
 
 I created this tool during the work on my diploma thesis in physics since I was unhappy
 with existing tools like [Mendeley](http://www.mendeley.com/). I use this tool together with Git for version control
 and [JabRef](http://jabref.sourceforge.net/) for browsing. This tool adheres more to the Unix philosophy that a small tool
 for each task is better than one thing which tries to solve everything. If you use [JabRef](http://jabref.sourceforge.net/)
-for browsing and tagging it is unnecessary to sort the papers into different subdirectories by hand.
+for browsing and tagging it is unnecessary to sort the papers into different sub directories by hand.
 Just throw them all in one directory!
 
 __Note__: This tool is derived from a script which I used during my thesis. It worked
