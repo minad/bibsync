@@ -118,8 +118,8 @@ module BibSync
     class Entry
       include Enumerable
 
-      attr_accessor :bibliography
-      attr_reader :key, :type
+      attr_accessor :bibliography, :type
+      attr_reader :key
 
       def self.parse(text)
         Entry.new.tap {|e| e.parse(text) }
@@ -141,10 +141,6 @@ module BibSync
         else
           @key = key
         end
-      end
-
-      def type=(type)
-        @type = type.upcase
       end
 
       def file=(file)
