@@ -25,9 +25,7 @@ module BibSync
         files.each do |key, file|
           unless entry = @bib[key]
             info('New file', :key => key)
-            entry = Bibliography::Entry.new
-            entry.key = key
-            @bib << entry
+            @bib << Bibliography::Entry.new(:key => key)
           end
 
           entry.type ||= :ARTICLE
