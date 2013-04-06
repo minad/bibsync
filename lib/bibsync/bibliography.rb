@@ -141,9 +141,9 @@ module BibSync
       def file
         if self[:file]
           raise 'No bibliography set' unless bibliography
-          description, file, type = self[:file].split(':', 3)
+          _, file, type = self[:file].split(':', 3)
           path = (Pathname.new(bibliography.file).realpath.parent + file).to_s
-          { :name => File.basename(path), :type => type.upcase.to_sym, :path => path }
+          { name: File.basename(path), type: type.upcase.to_sym, path: path }
         end
       end
 

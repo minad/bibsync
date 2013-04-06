@@ -32,7 +32,7 @@ BibSync supports the following features:
 Quick start
 -----------
 
-BibSync requires Ruby > 1.8.7 to run. It is distributed as a RubyGems package. You can install it via
+BibSync requires Ruby >= 1.9.2 to run. It is distributed as a RubyGems package. You can install it via
 the command line
 
 ~~~

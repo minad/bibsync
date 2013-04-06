@@ -27,7 +27,7 @@ module BibSync
           w << 'File name does not match entry key' if name_without_ext(file[:name]) != entry.key if file
 
           if entry[:arxiv]
-            id = arxiv_id(entry, :version => false, :prefix => true)
+            id = arxiv_id(entry, version: false, prefix: true)
             if arxivs.include?(id)
               w << "ArXiv duplicate of '#{arxivs[id]}'"
             else
@@ -51,7 +51,7 @@ module BibSync
             end
           end
 
-          warning(w.join('; '), :key => entry) unless w.empty?
+          warning(w.join('; '), key: entry) unless w.empty?
         end
       end
     end

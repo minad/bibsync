@@ -19,7 +19,7 @@ module BibSync
             $1.split(/\s*,\s*/).each do |key|
               key.strip!
               file = @bib.relative_path(file)
-              debug("Cited in #{file}", :key => key)
+              debug("Cited in #{file}", key: key)
               (cites[key] ||= []) << file
             end
           end
@@ -35,7 +35,7 @@ module BibSync
           if @bib[key]
             @bib[key][:citedbyme] = files
           else
-            warning("Cited in #{files} but not found in #{@bib.file}", :key => key)
+            warning("Cited in #{files} but not found in #{@bib.file}", key: key)
           end
         end
 

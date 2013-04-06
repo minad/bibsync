@@ -15,7 +15,7 @@ module BibSync
 
     def arxiv_download(dir, id)
       url = "http://arxiv.org/pdf/#{id}"
-      file = File.join(dir, "#{arxiv_id(id, :version => true, :prefix => false)}.pdf")
+      file = File.join(dir, "#{arxiv_id(id, version: true, prefix: false)}.pdf")
       result = `curl --stderr - -S -s -L -o #{Shellwords.escape file} #{Shellwords.escape url}`
       raise result.chomp if $? != 0
     end

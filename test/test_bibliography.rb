@@ -29,7 +29,7 @@ describe BibSync::Bibliography do
     end
 
     it 'must be true after adding an entry' do
-      bib << BibSync::Bibliography::Entry.new(:key => 'test')
+      bib << BibSync::Bibliography::Entry.new(key: 'test')
       bib.dirty?.must_equal true
     end
 
@@ -54,7 +54,7 @@ describe BibSync::Bibliography do
     end
 
     it 'must be false after adding an entry' do
-      newbib << BibSync::Bibliography::Entry.new(:key => 'test')
+      newbib << BibSync::Bibliography::Entry.new(key: 'test')
       newbib.empty?.must_equal false
     end
   end
@@ -66,7 +66,7 @@ describe BibSync::Bibliography do
 
     it 'must increment after adding an entry' do
       size = bib.size
-      bib << BibSync::Bibliography::Entry.new(:key => 'test')
+      bib << BibSync::Bibliography::Entry.new(key: 'test')
       bib.size.must_equal size + 1
     end
   end

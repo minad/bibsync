@@ -30,15 +30,15 @@ module BibSync
     end
 
     def notice(message, opts = {})
-      log(message, opts.merge(:color => Blue))
+      log(message, opts.merge(color: Blue))
     end
 
     def warning(message, opts = {})
-      log(message, opts.merge(:color => Yellow))
+      log(message, opts.merge(color: Yellow))
     end
 
     def error(message, opts = {})
-      log(message, opts.merge(:color => Red))
+      log(message, opts.merge(color: Red))
     end
 
     def log(message, opts = {})

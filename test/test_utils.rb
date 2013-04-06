@@ -36,19 +36,19 @@ describe BibSync::Utils do
 
   describe '#arxiv_id' do
     it 'removes version from arxiv id' do
-      arxiv_id('1234.5678v1', :version => false, :prefix => false).must_equal '1234.5678'
+      arxiv_id('1234.5678v1', version: false, prefix: false).must_equal '1234.5678'
     end
 
     it 'keeps version from arxiv id' do
-      arxiv_id('1234.5678v1', :version => true, :prefix => false).must_equal '1234.5678v1'
+      arxiv_id('1234.5678v1', version: true, prefix: false).must_equal '1234.5678v1'
     end
 
     it 'removes prefix from arxiv id' do
-      arxiv_id('prefix/1234v1', :version => false, :prefix => false).must_equal '1234'
+      arxiv_id('prefix/1234v1', version: false, prefix: false).must_equal '1234'
     end
 
     it 'keeps prefix from arxiv id' do
-      arxiv_id('prefix/1234v1', :version => false, :prefix => true).must_equal 'prefix/1234'
+      arxiv_id('prefix/1234v1', version: false, prefix: true).must_equal 'prefix/1234'
     end
   end
 end

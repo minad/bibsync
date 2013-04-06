@@ -40,11 +40,11 @@ module BibSync
               xml = fetch_xml("http://export.arxiv.org/api/query?id_list=#{ids.join(',')}&max_results=#{SliceSize}")
               xml.xpath('//entry/id').map(&:content).each_with_index do |id, i|
                 id.gsub!('http://arxiv.org/abs/', '')
-                info 'arXiv download', :key => id
+                info 'arXiv download', key: id
                 arxiv_download(@dir, id)
               end
             rescue => ex
-              error('arXiv query failed', :ex => ex)
+              error('arXiv query failed', ex: ex)
             end
           end
         end
