@@ -121,9 +121,7 @@ module BibSync
       attr_accessor :key, :type, :bibliography
 
       def self.parse(text)
-        entry = Entry.new
-        entry.parse(text)
-        entry
+        Entry.new.tap {|e| e.parse(text) }
       end
 
       def initialize(fields = {})
@@ -152,7 +150,7 @@ module BibSync
       end
 
       def []=(key, value)
-        if value then
+        if value
           key = convert_key(key)
           value = RawValue === value ? RawValue.new(value.to_s.strip) : value.to_s.strip
           if @fields[key] != value || @fields[key].class != value.class
