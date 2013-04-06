@@ -19,6 +19,14 @@ module BibSync
       @dirty = true
     end
 
+    def empty?
+      @entries.empty?
+    end
+
+    def size
+      @entries.size
+    end
+
     def [](key)
       @entries[key]
     end
