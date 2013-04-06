@@ -90,7 +90,7 @@ module BibSync
 
       if @options[:bib]
         @options[:bib] = Bibliography.new(@options[:bib])
-        @options[:bib].save_hook(Transformer.new)
+        @options[:bib].save_hook = Transformer.new
       end
 
       actions = []

@@ -3,16 +3,12 @@ module BibSync
     include Enumerable
 
     attr_reader :file
+    attr_accessor :save_hook
 
     def initialize(file = nil)
       @entries, @file = {}, file
       parse(File.read(@file)) if @file && File.exists?(@file)
       @dirty = false
-      @save_hooks = []
-    end
-
-    def save_hook(hook)
-      @save_hooks << hook
     end
 
     def dirty?
@@ -54,7 +50,7 @@ module BibSync
 
       raise 'No filename given' unless @file
       if @dirty
-        @save_hooks.each {|hook| hook.call(self) }
+        @save_hook.call(self) if @save_hook
         File.open("#{@file}.tmp", 'w') {|f| f.write(self) }
         File.rename("#{@file}.tmp", @file)
         @dirty = false

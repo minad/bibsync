@@ -5,7 +5,7 @@ module BibSync
       include Log
 
       def initialize(options)
-        raise 'Bibliography must be set' unless @bib = options[:bib]
+        raise 'Option :bib is required' unless @bib = options[:bib]
         @force = options[:resync]
       end
 

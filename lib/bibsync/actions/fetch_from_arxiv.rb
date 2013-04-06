@@ -7,8 +7,8 @@ module BibSync
       include Utils
 
       def initialize(options)
-        raise 'Fetch must be set' unless @fetch = options[:fetch]
-        raise 'Directory must be set' unless @dir = options[:dir]
+        raise 'Option :fetch is required' unless @fetch = options[:fetch]
+        raise 'Option :dir is required' unless @dir = options[:dir]
       end
 
       def run
@@ -18,7 +18,7 @@ module BibSync
         @fetch.each do |url|
           if url =~ /\A(\d+\.\d+)(v\d+)?\Z/
             arxivs << $1
-          if url =~ %r{\Ahttp://arxiv.org/abs/(\d+\.\d+)\Z}
+          elsif url =~ %r{\Ahttp://arxiv.org/abs/(\d+\.\d+)\Z}
             arxivs << $1
           else
             urls << url

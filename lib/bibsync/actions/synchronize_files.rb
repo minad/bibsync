@@ -7,8 +7,8 @@ module BibSync
       FileTypes = %w(djvu pdf ps)
 
       def initialize(options)
-        raise 'Bibliography must be set' unless @bib = options[:bib]
-        raise 'Directory must be set' unless @dir = options[:dir]
+        raise 'Option :bib is required' unless @bib = options[:bib]
+        raise 'Option :dir is required' unless @dir = options[:dir]
       end
 
       def run
