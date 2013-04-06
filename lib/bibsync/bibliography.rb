@@ -47,8 +47,8 @@ module BibSync
 
     def relative_path(file)
       raise 'No filename given' unless @file
-      bibpath = Pathname.new(@file).realpath.parent
-      Pathname.new(file).realpath.relative_path_from(bibpath).to_s
+      bibpath = File.absolute_path(File.dirname(@file))
+      Pathname.new(file).realpath.relative_path_from(Pathname.new(bibpath)).to_s
     end
 
     def each(&block)
@@ -154,7 +154,7 @@ module BibSync
         if self[:file]
           raise 'No bibliography set' unless bibliography
           _, file, type = self[:file].split(':', 3)
-          path = (Pathname.new(bibliography.file).realpath.parent + file).to_s
+          path = File.join(File.absolute_path(File.dirname(bibliography.file)), file)
           { name: File.basename(path), type: type.upcase.to_sym, path: path }
         end
       end
