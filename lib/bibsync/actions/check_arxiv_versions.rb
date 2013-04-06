@@ -1,6 +1,6 @@
 module BibSync
   module Actions
-    class CheckVersions
+    class CheckArXivVersions
       include Log
       include Utils
 

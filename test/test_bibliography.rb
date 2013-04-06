@@ -1,51 +1,89 @@
 require 'helper'
 
 describe BibSync::Bibliography do
-  it 'can be created without an argument' do
-    bib = BibSync::Bibliography.new
-    bib.dirty?.must_equal false
-    bib.empty?.must_equal true
-    bib.size.must_equal 0
-    bib.file.must_equal nil
+  describe '#initialize' do
   end
 
-  it 'can be created with non-existing file' do
-    file = File.join(tmpdir, 'test.bib')
-    bib = BibSync::Bibliography.new(file)
-    bib.dirty?.must_equal false
-    bib.empty?.must_equal true
-    bib.size.must_equal 0
-    bib.file.must_equal file
+  describe '#dirty?' do
   end
 
-  it 'can be saved' do
-    file = File.join(tmpdir, 'test.bib')
-    bib = BibSync::Bibliography.new
-    bib.file.must_equal nil
-    bib.save(file)
-    bib.file.must_equal file
+  describe '#dirty!' do
   end
 
-  it 'reads entries' do
-
+  describe '#empty?' do
   end
 
-  it 'saves entries' do
-
+  describe '#size' do
   end
 
-  it 'adds entries' do
+  describe '#[]' do
   end
 
-  it 'deletes entries' do
+  describe '#delete' do
   end
 
-  it 'has a method #relative_path' do
+  describe '#clear' do
   end
 
-  it 'has a method #each' do
+  describe '#relative_path' do
   end
 
-  it 'has method #parse' do
+  describe '#each' do
+  end
+
+  describe '#save' do
+  end
+
+  describe '#<<' do
+  end
+
+  describe '#load' do
+  end
+
+  describe '#load!' do
+  end
+
+  describe '#parse' do
+  end
+
+  describe '#to_s' do
+  end
+end
+
+describe BibSync::Bibliography::Entry do
+  describe '#self.parse' do
+  end
+
+  describe '#initialize' do
+  end
+
+  describe '#file=' do
+  end
+
+  describe '#file' do
+  end
+
+  describe '#[]' do
+  end
+
+  describe '#[]=' do
+  end
+
+  describe '#delete' do
+  end
+
+  describe '#each' do
+  end
+
+  describe '#comment?' do
+  end
+
+  describe '#dirty!' do
+  end
+
+  describe '#to_s' do
+  end
+
+  describe '#parse' do
   end
 end

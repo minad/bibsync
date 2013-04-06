@@ -95,7 +95,7 @@ module BibSync
 
       actions = []
       actions << :FetchFromArXiv if @options[:fetch]
-      actions << :CheckVersions if @options[:check_versions] || @options[:update]
+      actions << :CheckArXivVersions if @options[:check_versions] || @options[:update]
       actions << :SynchronizeFiles << :DetermineArXivDOI << :SynchronizeMetadata if @options[:sync] || @options[:resync]
       actions << :FindMyCitations if @options[:citedbyme]
       actions << :Validate if @options[:bib]
