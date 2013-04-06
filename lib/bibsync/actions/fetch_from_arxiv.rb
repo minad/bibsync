@@ -12,12 +12,14 @@ module BibSync
       end
 
       def run
-        ids = []
+        arxivs = []
         urls = []
 
         @fetch.each do |url|
-          if url =~ %r{^http://arxiv.org/abs/(\d+\.\d+)$}
-            ids << $1
+          if url =~ /\A(\d+\.\d+)(v\d+)?\Z/
+            arxivs << $1
+          if url =~ %r{\Ahttp://arxiv.org/abs/(\d+\.\d+)\Z}
+            arxivs << $1
           else
             urls << url
           end
@@ -31,9 +33,9 @@ module BibSync
           end
         end
 
-        unless ids.empty?
+        unless arxivs.empty?
           notice 'Downloading from arXiv'
-          ids.each_slice(SliceSize) do |ids|
+          arxivs.each_slice(SliceSize) do |ids|
             begin
               xml = fetch_xml("http://export.arxiv.org/api/query?id_list=#{ids.join(',')}&max_results=#{SliceSize}")
               xml.xpath('//entry/id').map(&:content).each_with_index do |id, i|
