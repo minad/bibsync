@@ -154,6 +154,19 @@ describe BibSync::Bibliography::Entry do
   end
 
   describe '#initialize' do
+    it 'should not set type and key' do
+      entry = BibSync::Bibliography::Entry.new
+      entry.type.must_be_nil
+      entry.key.must_be_nil
+      entry[:author].must_be_nil
+    end
+
+    it 'should initialize fields' do
+      entry = BibSync::Bibliography::Entry.new(type: 'ARTICLE', key: 'key', author: 'Daniel')
+      entry.type.must_equal 'ARTICLE'
+      entry.key.must_equal 'key'
+      entry[:author].must_equal 'Daniel'
+    end
   end
 
   describe '#file=' do

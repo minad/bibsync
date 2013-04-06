@@ -99,7 +99,7 @@ module BibSync
       actions << :SynchronizeFiles << :DetermineArXivDOI << :SynchronizeMetadata if @options[:sync] || @options[:resync]
       actions << :FindMyCitations if @options[:citedbyme]
       actions << :Validate if @options[:bib]
-      actions << :JabrefFormat if @options[:jabref]
+      actions << :JabRefFormat if @options[:jabref]
 
       if actions.empty?
         puts "Please specify actions! See #{$0} --help"

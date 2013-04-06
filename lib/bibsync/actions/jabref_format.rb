@@ -1,6 +1,6 @@
 module BibSync
   module Actions
-    class JabrefFormat
+    class JabRefFormat
       include Utils
       include Log
 

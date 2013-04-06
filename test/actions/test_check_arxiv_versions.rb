@@ -1,4 +1,4 @@
 require 'helper'
 
-describe BibSync::Actions::CheckVersions do
+describe BibSync::Actions::CheckArXivVersions do
 end

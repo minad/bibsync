@@ -3,6 +3,9 @@ require 'minitest/autorun'
 require 'bibsync'
 require 'fileutils'
 
+BibSync::Log.level = :error
+BibSync::Log.trace = true
+
 module Helper
   def tmpdir
     dir = File.join(File.dirname(__FILE__), 'tmp')
