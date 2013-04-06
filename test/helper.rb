@@ -11,7 +11,7 @@ module Helper
   end
 
   def fixturedir
-    FileUtils.join(File.dirname(__FILE__), 'fixtures')
+    File.join(File.dirname(__FILE__), 'fixture')
   end
 end
 

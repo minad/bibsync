@@ -75,6 +75,8 @@ module BibSync
     end
 
     def <<(entry)
+      raise 'Entry has no key' if !entry.key || entry.key.empty?
+      raise 'Entry is already existing' if @entries.include?(entry.key)
       entry.bibliography = self
       @entries[entry.key] = entry
       dirty!
@@ -124,8 +126,9 @@ module BibSync
         entry
       end
 
-      def initialize
-        @fields = {}
+      def initialize(fields = {})
+        @key = fields.delete(:key)
+        @fields = fields
       end
 
       def file=(file)
