@@ -1,8 +1,1 @@
-require 'bibsync/actions/check_versions'
-require 'bibsync/actions/synchronize_files'
-require 'bibsync/actions/determine_arxiv_doi'
-require 'bibsync/actions/synchronize_metadata'
-require 'bibsync/actions/validate'
-require 'bibsync/actions/jabref_format'
-require 'bibsync/actions/fetch_from_arxiv'
-require 'bibsync/actions/find_my_citations'
+Dir[File.join(File.dirname(__FILE__), 'actions', '*.rb')].each {|f| require f }
