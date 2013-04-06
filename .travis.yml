@@ -5,3 +5,6 @@ rvm:
   - ruby-head
   - jruby-19mode
   - rbx-19mode
+before_install:
+  - sudo apt-get install -qq poppler-utils
+
