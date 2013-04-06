@@ -14,7 +14,7 @@ module BibSync
       process
       exit 0
     rescue Exception => ex
-      raise ex if Log.trace? || SystemExit === ex
+      raise ex if Log.trace || SystemExit === ex
       $stderr.print "#{ex.class}: " if ex.class != RuntimeError
       $stderr.puts ex.message
       $stderr.puts '  Use --trace for backtrace.'
@@ -63,11 +63,11 @@ module BibSync
       end
 
       opts.on('-V', '--verbose', 'Verbose output') do
-        Log.verbose!
+        Log.level = :debug
       end
 
       opts.on('--trace', 'Show a full traceback on error') do
-        Log.trace!
+        Log.trace = true
       end
 
       opts.on('-h', '--help', 'Display this help') do
