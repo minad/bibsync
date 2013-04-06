@@ -24,7 +24,7 @@ module BibSync
           missing += [:title, :author, :year, :abstract].reject {|k| entry[k] }
           w << "Missing #{missing.map(&:to_s).sort.join(', ')}" unless missing.empty?
 
-          w << 'Invalid file' if split_filename(file[:name]).first != entry.key if file
+          w << 'File name does not match entry key' if split_filename(file[:name]).first != entry.key if file
 
           if entry[:arxiv]
             id = arxiv_id(entry, :version => false, :prefix => true)
