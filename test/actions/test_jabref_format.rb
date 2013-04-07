@@ -20,7 +20,6 @@ describe BibSync::Actions::JabRefFormat do
 
   it 'should format file' do
     action.run
-    puts File.read(@tmpfile)
     File.read(@tmpfile).must_match(/created\s+with\s+JabRef/)
   end
 end

@@ -7,8 +7,12 @@ BibSync::Log.level = :error
 BibSync::Log.trace = true
 
 module Helper
+  def testdir
+    File.dirname(__FILE__)
+  end
+
   def fixturedir
-    File.join(File.dirname(__FILE__), 'fixture')
+    File.join(testdir, 'fixture')
   end
 end
 
