@@ -27,7 +27,7 @@ module BibSync
     end
 
     def [](key)
-      @entries[key]
+      @entries[key.to_s]
     end
 
     def delete(entry)
@@ -102,7 +102,7 @@ module BibSync
         else
           entry = Entry.new
           text = entry.parse(text)
-          entry.key ||= @entries.size
+          entry.key ||= "entry#{@entries.size}" # Number of entries for comment id
           self << entry
         end
       end
