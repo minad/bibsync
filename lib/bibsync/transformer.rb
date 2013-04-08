@@ -20,7 +20,7 @@ module BibSync
         end
 
         if entry[:month]
-          entry[:month] = Bibliography::RawValue.new(entry[:month].downcase)
+          entry[:month] = Bibliography::Literal.new(entry[:month].downcase)
         end
 
         if entry[:journal]

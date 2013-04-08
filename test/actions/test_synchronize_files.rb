@@ -20,7 +20,7 @@ describe BibSync::Actions::SynchronizeFiles do
 
   it 'should synchronize files' do
     10.times do |i|
-      bib << BibSync::Bibliography::Entry.new(key: i) if i % 2 == 0
+      bib << BibSync::Entry.new(key: i) if i % 2 == 0
       FileUtils.touch(File.join(@tmpdir, "#{i}.pdf"))
     end
     bib.size.must_equal 5

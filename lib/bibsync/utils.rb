@@ -32,7 +32,7 @@ module BibSync
 
     def arxiv_id(arxiv, opts = {})
       raise unless opts.include?(:prefix) && opts.include?(:version)
-      arxiv = arxiv[:arxiv] if Bibliography::Entry === arxiv
+      arxiv = arxiv[:arxiv] if Entry === arxiv
       if arxiv
         arxiv = arxiv.sub(/\A.*\//, '') unless opts[:prefix]
         arxiv = arxiv.sub(/v\d+\Z/, '') unless opts[:version]

@@ -49,7 +49,7 @@ module BibSync
         info('Downloading DOI metadata', key: entry)
         text = fetch("http://dx.doi.org/#{entry[:doi]}", 'Accept' => 'text/bibliography; style=bibtex')
         raise text if text == 'Unknown DOI'
-        Bibliography::Entry.parse(text).each {|k, v| entry[k] = v }
+        Entry.parse(text).each {|k, v| entry[k] = v }
       rescue => ex
         entry.delete(:doi)
         error('DOI download failed', key: entry, ex: ex)
@@ -112,7 +112,7 @@ module BibSync
         date = xml.xpath('//arXiv/updated').map(&:content).first || xml.xpath('//arXiv/created').map(&:content).first
         date = Date.parse(date)
         entry[:year] = date.year
-        entry[:month] = Bibliography::RawValue.new(%w(jan feb mar apr may jun jul aug sep oct nov dec)[date.month - 1])
+        entry[:month] = Literal.new(%w(jan feb mar apr may jun jul aug sep oct nov dec)[date.month - 1])
         doi = xml.xpath('//arXiv/doi').map(&:content).first
         entry[:doi] = doi if doi
         journal = xml.xpath('//arXiv/journal-ref').map(&:content).first
