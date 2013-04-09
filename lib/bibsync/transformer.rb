@@ -6,6 +6,23 @@ module BibSync
       bib.each do |entry|
         next if entry.comment?
 
+        # Fix math mode of title and abstract
+        [:title, :abstract].each do |k|
+          next unless v = entry[k]
+
+          parts = v.split('$', -1)
+          parts.each_with_index do |part, i|
+            if i % 2 == 0 # Not in math mode
+
+              # Fix underscores which are not wrapped by $
+              parts[i].gsub!(/(\s|\A)([^\s]*?_[^\s]*?)([:\.,]|(\-\w+))?(\s|\Z)/) do
+                "#{$1}$#{$2}$#{$3}#{$5}"
+              end
+            end
+          end
+          entry[k] = parts.join('$')
+        end
+
         if entry[:author]
           entry[:author] = entry[:author].gsub(/\{(\w+)\}/, '\\1').gsub(/#/, ' and ')
         end
@@ -20,7 +37,7 @@ module BibSync
         end
 
         if entry[:month]
-          entry[:month] = Bibliography::Literal.new(entry[:month].downcase)
+          entry[:month] = Literal.new(entry[:month].downcase)
         end
 
         if entry[:journal]
