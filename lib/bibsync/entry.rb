@@ -1,9 +1,11 @@
 module BibSync
   class Entry
     include Enumerable
+    extend Forwardable
 
     attr_accessor :bibliography, :type
     attr_reader :key
+    def_delegators :@fields, :empty?, :size, :each
 
     def self.parse(text)
       Entry.new.tap {|e| e.parse(text) }
@@ -66,10 +68,6 @@ module BibSync
         @fields.delete(key)
         dirty!
       end
-    end
-
-    def each(&block)
-      @fields.each(&block)
     end
 
     def comment?

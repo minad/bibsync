@@ -49,6 +49,12 @@ describe BibSync::Entry do
   describe '#each' do
   end
 
+  describe '#size' do
+  end
+
+  describe '#empty?' do
+  end
+
   describe '#comment?' do
     it 'should return true for a comment entry' do
       BibSync::Entry.new(type: 'coMMent').comment?.must_equal true

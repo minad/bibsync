@@ -1,9 +1,12 @@
 module BibSync
   class Bibliography
     include Enumerable
+    extend Forwardable
 
     attr_reader :file
     attr_accessor :save_hook
+    def_delegators :@entries, :empty?, :size
+    def_delegator :@entries, :each_value, :each
 
     def initialize(file = nil)
       @entries, @save_hook = {}, nil
@@ -16,14 +19,6 @@ module BibSync
 
     def dirty!
       @dirty = true
-    end
-
-    def empty?
-      @entries.empty?
-    end
-
-    def size
-      @entries.size
     end
 
     def [](key)
@@ -49,10 +44,6 @@ module BibSync
       raise 'No filename given' unless @file
       bibpath = File.absolute_path(File.dirname(@file))
       Pathname.new(file).realpath.relative_path_from(Pathname.new(bibpath)).to_s
-    end
-
-    def each(&block)
-      @entries.each_value(&block)
     end
 
     def save(file = nil)
