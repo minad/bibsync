@@ -7,8 +7,8 @@ module BibSync
       SliceSize = 20
 
       def initialize(options)
-        raise 'Option :bib is required' unless @bib = options[:bib]
-        raise 'Option :dir is required' unless @dir = options[:dir]
+        raise 'Option --bib is required' unless @bib = options[:bib]
+        raise 'Option --dir is required' unless @dir = options[:dir]
         @update = options[:update]
       end
 

@@ -5,8 +5,8 @@ module BibSync
       include Utils
 
       def initialize(options)
-        raise 'Option :bib is required' unless @bib = options[:bib]
-        raise 'Option :citedbyme is required' unless @dir = options[:citedbyme]
+        raise 'Option --bib is required' unless @bib = options[:bib]
+        raise 'Option --citedbyme is required' unless @dir = options[:citedbyme]
         raise "#{@dir} is not a directory" unless File.directory?(@dir)
       end
 

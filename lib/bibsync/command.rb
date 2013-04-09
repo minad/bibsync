@@ -30,7 +30,7 @@ module BibSync
         @options[:bib] = bib
       end
 
-      opts.on('-d', '--directory directory', 'Set directory') do |dir|
+      opts.on('-d', '--dir directory', 'Set directory') do |dir|
         @options[:dir] = dir
       end
 

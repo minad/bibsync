@@ -7,8 +7,8 @@ module BibSync
       include Utils
 
       def initialize(options)
-        raise 'Option :fetch is required' unless @fetch = options[:fetch]
-        raise 'Option :dir is required' unless @dir = options[:dir]
+        raise 'Option --fetch is required' unless @fetch = options[:fetch]
+        raise 'Option --dir is required' unless @dir = options[:dir]
       end
 
       def run
