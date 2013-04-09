@@ -12,9 +12,10 @@ module BibSync
     end
 
     def initialize(fields = {})
+      @fields = {}
       self.key = fields.delete(:key) if fields.include?(:key)
       self.type = fields.delete(:type) if fields.include?(:type)
-      @fields = fields
+      fields.each {|k,v| self[k] = v }
     end
 
     def key=(key)
@@ -41,7 +42,7 @@ module BibSync
         raise 'No bibliography set' unless bibliography
         _, file, type = self[:file].split(':', 3)
         path = File.join(File.absolute_path(File.dirname(bibliography.file)), file)
-        { name: File.basename(path), type: type.upcase.to_sym, path: path }
+        { name: File.basename(path), type: type.upcase, path: path }
       end
     end
 
@@ -156,7 +157,7 @@ module BibSync
     end
 
     def convert_key(key)
-      key.to_s.downcase.to_sym
+      key.to_s.downcase
     end
   end
 end

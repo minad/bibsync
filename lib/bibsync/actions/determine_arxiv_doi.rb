@@ -27,7 +27,7 @@ module BibSync
 
       def determine_arxiv_and_doi(entry)
         if file = entry.file
-          if file[:type] == :PDF && !entry[:arxiv] && !entry[:doi]
+          if file[:type] == 'PDF' && !entry[:arxiv] && !entry[:doi]
             debug('Searching for arXiv or doi identifier in pdf file', key: entry)
             text = `pdftotext -f 1 -l 2 #{Shellwords.escape file[:path]} - 2>/dev/null`
             entry[:arxiv] = $1 if text =~ /arXiv:\s*([\w\.\/\-]+)/
