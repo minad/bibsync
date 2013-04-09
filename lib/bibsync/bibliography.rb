@@ -49,7 +49,6 @@ module BibSync
     def save(file = nil)
       if file
         @file = file
-        @parent_path = nil
         dirty!
       end
 
