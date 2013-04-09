@@ -127,9 +127,6 @@ describe BibSync::Bibliography do
   describe '#load' do
   end
 
-  describe '#load!' do
-  end
-
   describe '#parse' do
   end
 

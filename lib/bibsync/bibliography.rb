@@ -72,14 +72,8 @@ module BibSync
       dirty!
     end
 
-    def load(file)
-      parse(File.read(file)) if file && File.exists?(file)
-      @file = file
-      @dirty = false
-    end
-
-    def load!(file)
-      parse(File.read(file))
+    def load(file, check = true)
+      parse(File.read(file)) if !check || (file && File.exists?(file))
       @file = file
       @dirty = false
     end
