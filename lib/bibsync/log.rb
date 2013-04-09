@@ -20,34 +20,16 @@ module BibSync
     self.trace = false
     self.level = :info
 
-    def debug(message, opts = {})
-      log(:debug, message, opts)
-    end
-
-    def info(message, opts = {})
-      log(:info, message, opts)
-    end
-
-    def notice(message, opts = {})
-      log(:notice, message, opts)
-    end
-
-    def warning(message, opts = {})
-      log(:warning, message, opts)
-    end
-
-    def error(message, opts = {})
-      log(:error, message, opts)
+    [:debug, :info, :notice, :warning, :error].each do |level|
+      define_method level do |message, opts = {}|
+        log(level, message, opts)
+      end
     end
 
     def log(level, message, opts = {})
       return if Level.keys.index(level) < Level.keys.index(Log.level)
-      if ex = opts[:ex]
-        message = "#{message} - #{ex.message}"
-      end
-      if color = Level[level]
-        message = "#{color}#{message}#{Reset}"
-      end
+      message = "#{message} - #{opts[:ex].message}" if opts[:ex]
+      message = "#{Level[level]}#{message}#{Reset}" if Level[level]
       if key = opts[:key]
         key = key.key if key.respond_to? :key
         message = "#{key} : #{message}"
