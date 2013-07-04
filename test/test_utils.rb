@@ -15,7 +15,7 @@ describe BibSync::Utils do
     end
 
     it 'fetches page with header' do
-      fetch('http://dx.doi.org/10.1098/rspa.1984.0023', 'Accept' => 'text/bibliography; style=bibtex').include?('Berry').must_equal true
+      fetch('http://dx.doi.org/10.1098/rspa.1984.0023', nil, 'Accept' => 'text/bibliography; style=bibtex').include?('Berry').must_equal true
     end
   end
 
@@ -24,7 +24,7 @@ describe BibSync::Utils do
 
   describe '#fetch_xml' do
     it 'fetches xml' do
-      fetch_xml('http://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:1208.2881&metadataPrefix=arXiv').must_be_instance_of Nokogiri::XML::Document
+      fetch_xml('http://export.arxiv.org/oai2', verb: 'GetRecord', identifier: 'oai:arXiv.org:1208.2881', metadataPrefix: 'arXiv').must_be_instance_of Nokogiri::XML::Document
     end
   end
 

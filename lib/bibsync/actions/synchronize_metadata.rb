@@ -27,7 +27,7 @@ module BibSync
             update_doi(entry) if entry[:doi]
           end
 
-          if @force || (!entry[:abstract] && entry[:doi] =~ /\A10\.1103\//)
+          if entry[:doi] =~ /\A10\.1103\// && (@force || !entry[:abstract])
             update_aps_abstract(entry)
           end
 
