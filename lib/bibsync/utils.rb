@@ -5,29 +5,35 @@ module BibSync
       $1
     end
 
-    def fetch(url, headers = {})
-      # open(url, headers) {|f| f.read }
-      headers = headers.map {|k,v| '-H ' + Shellwords.escape("#{k}: #{v}") }.join(' ')
-      result = `curl --stderr - -S -s -L #{headers} #{Shellwords.escape url}`
-      raise result.chomp if $? != 0
-      result
+    def fetch(url, params = nil, headers = nil)
+      client = Faraday.new(url) do |c|
+        c.use FaradayMiddleware::FollowRedirects, limit: 3
+        c.use Faraday::Response::RaiseError
+        c.use Faraday::Adapter::NetHttp
+      end
+      response = client.get(url, params, headers)
+      raise "HTTP error #{response.status}" unless response.status == 200
+      body = response.body
+      encoding = body.encoding
+      body.force_encoding(Encoding::UTF_8)
+      body.force_encoding(encoding) unless body.valid_encoding?
+      body
     end
 
     def arxiv_download(dir, id)
-      url = "http://arxiv.org/pdf/#{id}"
-      file = File.join(dir, "#{arxiv_id(id, version: true, prefix: false)}.pdf")
-      result = `curl --stderr - -S -s -L -o #{Shellwords.escape file} #{Shellwords.escape url}`
-      raise result.chomp if $? != 0
+      File.open(File.join(dir, "#{arxiv_id(id, version: true, prefix: false)}.pdf"), 'wb') do |o|
+        o.write(fetch("http://arxiv.org/pdf/#{id}"))
+      end
     end
 
-    def fetch_xml(url, headers = {})
-      xml = Nokogiri::XML(fetch(url, headers))
+    def fetch_xml(url, params = nil, headers = nil)
+      xml = Nokogiri::XML(fetch(url, params, headers))
       xml.remove_namespaces!
       xml
     end
 
-    def fetch_html(url, headers = {})
-      Nokogiri::HTML(fetch(url, headers))
+    def fetch_html(url, params = nil, headers = nil)
+      Nokogiri::HTML(fetch(url, params, headers))
     end
 
     def arxiv_id(arxiv, opts = {})

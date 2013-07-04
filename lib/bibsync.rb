@@ -1,4 +1,6 @@
 require 'nokogiri'
+require 'faraday'
+require 'faraday_middleware'
 require 'shellwords'
 require 'date'
 require 'pathname'

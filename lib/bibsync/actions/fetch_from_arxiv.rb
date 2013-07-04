@@ -37,7 +37,7 @@ module BibSync
           notice 'Downloading from arXiv'
           arxivs.each_slice(SliceSize) do |ids|
             begin
-              xml = fetch_xml("http://export.arxiv.org/api/query?id_list=#{ids.join(',')}&max_results=#{SliceSize}")
+              xml = fetch_xml('http://export.arxiv.org/api/query', id_list: ids.join(','), max_results: SliceSize)
               xml.xpath('//entry/id').map(&:content).each_with_index do |id, i|
                 id.gsub!('http://arxiv.org/abs/', '')
                 info 'arXiv download', key: id

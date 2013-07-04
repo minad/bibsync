@@ -12,7 +12,7 @@ module BibSync
       def run
         notice 'Synchronize with arXiv and DOI'
 
-        @bib.each do |entry|
+        @bib.to_a.each do |entry|
           next if entry.comment?
 
           if @force || !(entry[:title] && entry[:author] && entry[:year])
@@ -47,7 +47,7 @@ module BibSync
 
       def update_doi(entry)
         info('Downloading DOI metadata', key: entry)
-        text = fetch("http://dx.doi.org/#{entry[:doi]}", 'Accept' => 'text/bibliography; style=bibtex')
+        text = fetch("http://dx.doi.org/#{entry[:doi]}", nil, 'Accept' => 'text/bibliography; style=bibtex')
         raise text if text == 'Unknown DOI'
         Entry.parse(text).each {|k, v| entry[k] = v }
       rescue => ex
@@ -96,7 +96,7 @@ module BibSync
 
       def update_arxiv(entry)
         info('Downloading arXiv metadata', key: entry)
-        xml = fetch_xml("http://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:#{arxiv_id(entry, prefix: true, version: false)}&metadataPrefix=arXiv")
+        xml = fetch_xml('http://export.arxiv.org/oai2', verb: 'GetRecord', identifier: "oai:arXiv.org:#{arxiv_id(entry, prefix: true, version: false)}", metadataPrefix: 'arXiv')
         error = xml.xpath('//error').map(&:content).first
         raise error if error
 

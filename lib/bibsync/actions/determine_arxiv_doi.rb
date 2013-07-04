@@ -48,7 +48,7 @@ module BibSync
         if !entry[:arxiv] && entry[:doi]
           begin
             info('Fetch missing arXiv identifier', key: entry)
-            xml = fetch_xml("http://export.arxiv.org/api/query?search_query=doi:#{entry[:doi]}&max_results=1")
+            xml = fetch_xml('http://export.arxiv.org/api/query', search_query: "doi:#{entry[:doi]}", max_results: 1)
             if xml.xpath('//entry/doi').map(&:content).first == entry[:doi]
               id = xml.xpath('//entry/id').map(&:content).first
               if id =~ %r{\Ahttp://arxiv.org/abs/(.+)\Z}
