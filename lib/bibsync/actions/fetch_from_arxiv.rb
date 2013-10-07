@@ -18,7 +18,7 @@ module BibSync
         @fetch.each do |url|
           if url =~ /\A(\d+\.\d+)(v\d+)?\Z/
             arxivs << $1
-          elsif url =~ %r{\Ahttp://arxiv.org/abs/(\d+\.\d+)\Z}
+          elsif url =~ %r{\Ahttp://arxiv.org/abs/(\d+\.\d+)(v\d+)?\Z}
             arxivs << $1
           else
             urls << url
