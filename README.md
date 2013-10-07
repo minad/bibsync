@@ -39,6 +39,12 @@ the command line
 $ gem install bibsync
 ~~~
 
+And for updating, you write
+
+~~~
+$ gem update bibsync
+~~~
+
 After that you can use the 'bibsync' tool on the command line. At first let's validate
 a [BibTeX](http://en.wikipedia.org/wiki/BibTeX) file called 'thesis.bib'.
 
