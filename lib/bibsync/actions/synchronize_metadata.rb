@@ -103,15 +103,15 @@ module BibSync
 
       def update_arxiv(entry)
         info('Downloading arXiv metadata', key: entry)
+
         xml = fetch_xml('http://export.arxiv.org/oai2', verb: 'GetRecord', identifier: "oai:arXiv.org:#{arxiv_id(entry, prefix: true, version: false)}", metadataPrefix: 'arXiv')
         error = xml.xpath('//error').map(&:content).first
         raise error if error
 
         entry[:title] = xml.xpath('//arXiv/title').map(&:content).first
         entry[:abstract] = xml.xpath('//arXiv/abstract').map(&:content).first
-        cats = xml.xpath('//arXiv/categories').map(&:content)
-        entry[:arxivcategories] = cats.join(',')
-        entry[:primaryclass] = cats.first.split(/\s+/).first
+        entry[:arxivcategories] = xml.xpath('//arXiv/categories').map(&:content).first
+        entry[:primaryclass] = entry[:arxivcategories].split(/\s+/).first
         entry[:author] = xml.xpath('//arXiv/authors/author').map do |author|
           "{#{author.xpath('keyname').map(&:content).first}}, {#{author.xpath('forenames').map(&:content).first}}"
         end.join(' and ')
