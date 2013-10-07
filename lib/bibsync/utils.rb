@@ -20,6 +20,18 @@ module BibSync
       body
     end
 
+    def find_key(hash, name)
+      result = []
+      hash.each do |k,v|
+        if k == name
+          result << v
+        elsif Hash === v
+          result += find_key(v, name)
+        end
+      end
+      result.flatten
+    end
+
     def arxiv_download(dir, id)
       File.open(File.join(dir, "#{arxiv_id(id, version: true, prefix: false)}.pdf"), 'wb') do |o|
         o.write(fetch("http://arxiv.org/pdf/#{id}"))
@@ -27,13 +39,7 @@ module BibSync
     end
 
     def fetch_xml(url, params = nil, headers = nil)
-      xml = Nokogiri::XML(fetch(url, params, headers))
-      xml.remove_namespaces!
-      xml
-    end
-
-    def fetch_html(url, params = nil, headers = nil)
-      Nokogiri::HTML(fetch(url, params, headers))
+      MultiXml.parse(fetch(url, params, headers))
     end
 
     def arxiv_id(arxiv, opts = {})

@@ -1,4 +1,4 @@
-require 'nokogiri'
+require 'multi_xml'
 require 'faraday'
 require 'faraday_middleware'
 require 'shellwords'

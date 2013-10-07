@@ -24,13 +24,13 @@ describe BibSync::Utils do
 
   describe '#fetch_xml' do
     it 'fetches xml' do
-      fetch_xml('http://export.arxiv.org/oai2', verb: 'GetRecord', identifier: 'oai:arXiv.org:1208.2881', metadataPrefix: 'arXiv').must_be_instance_of Nokogiri::XML::Document
+      fetch_xml('http://export.arxiv.org/oai2', verb: 'GetRecord', identifier: 'oai:arXiv.org:1208.2881', metadataPrefix: 'arXiv').must_be_instance_of Hash
     end
   end
 
-  describe '#fetch_html' do
-    it 'fetches html' do
-      fetch_html('http://google.com').must_be_instance_of Nokogiri::HTML::Document
+  describe '#find_key' do
+    it 'finds nested keys' do
+      find_key({'a' => 1, 'b' => {'a' => [2, 3], 'c' => {'a' => 4}}}, 'a').must_equal [1,2,3,4]
     end
   end
 

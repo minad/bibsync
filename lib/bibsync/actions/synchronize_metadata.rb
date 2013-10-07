@@ -38,28 +38,42 @@ module BibSync
         @bib.to_a.each do |entry|
           next if entry.comment?
           entry[:added] ||= Date.today.to_s
-          @bib.save
         end
+        @bib.save
       end
 
       private
 
       def update_aps_abstract(entry)
         info("Downloading APS abstract", key: entry)
-        html = fetch_html("http://link.aps.org/doi/#{entry[:doi]}")
-        entry[:abstract] = html.css('.aps-abstractbox').map(&:content).first
+        html = fetch("http://link.aps.org/doi/#{entry[:doi]}")
+        if html =~ %r{<div class='aps-abstractbox'>(.*?)</div>}
+          entry[:abstract] = $1.gsub(/<[^>]+>/, '')
+        end
       rescue => ex
         error('Abstract download failed', key: entry, ex: ex)
       end
 
       def update_doi(entry)
-        info('Downloading DOI metadata', key: entry)
-        text = fetch("http://dx.doi.org/#{entry[:doi]}", nil, 'Accept' => 'text/bibliography; style=bibtex')
+        url = "http://dx.doi.org/#{entry[:doi]}"
+        info("Downloading DOI metadata from #{url}", key: entry)
+        text = fetch(url, nil, 'Accept' => 'text/bibliography; style=bibtex')
         raise text if text == 'Unknown DOI'
         Entry.parse(text).each {|k, v| entry[k] = v }
       rescue => ex
-        entry.delete(:doi)
         error('DOI download failed', key: entry, ex: ex)
+        # dx.doi.org shows spurious 500 errors
+        if ex.respond_to?(:response) && ex.response[:status] == 500
+          tries ||= 0
+          tries += 1
+          if tries < 10
+            info('Retrying...', key: entry)
+            retry
+          else
+            error('Giving up :(', key: entry)
+          end
+        end
+        entry.delete(:doi)
       end
 
       # Rename arxiv file if key contains version
@@ -105,30 +119,29 @@ module BibSync
         info('Downloading arXiv metadata', key: entry)
 
         xml = fetch_xml('http://export.arxiv.org/oai2', verb: 'GetRecord', identifier: "oai:arXiv.org:#{arxiv_id(entry, prefix: true, version: false)}", metadataPrefix: 'arXiv')
-        error = xml.xpath('//error').map(&:content).first
-        raise error if error
+        error = find_key(xml, 'error')
+        raise error.first unless error.empty?
 
-        entry[:title] = xml.xpath('//arXiv/title').map(&:content).first
-        entry[:abstract] = xml.xpath('//arXiv/abstract').map(&:content).first
-        entry[:arxivcategories] = xml.xpath('//arXiv/categories').map(&:content).first
+        arXiv = find_key(xml, 'arXiv').first
+
+        entry[:title] = arXiv['title']
+        entry[:abstract] = arXiv['abstract']
+        entry[:arxivcategories] = arXiv['categories']
         entry[:primaryclass] = entry[:arxivcategories].split(/\s+/).first
-        entry[:author] = xml.xpath('//arXiv/authors/author').map do |author|
-          "{#{author.xpath('keyname').map(&:content).first}}, {#{author.xpath('forenames').map(&:content).first}}"
+        entry[:author] = [arXiv['authors']['author']].flatten.map do |author|
+          "{#{author['keyname']}}, {#{author['forenames']}}"
         end.join(' and ')
         entry[:journal] = 'ArXiv e-prints'
         entry[:eprint] = entry[:arxiv]
         entry[:archiveprefix] = 'arXiv'
-        entry[:arxivcreated] = xml.xpath('//arXiv/created').map(&:content).first
-        entry[:arxivupdated] = xml.xpath('//arXiv/updated').map(&:content).first
+        entry[:arxivcreated] = arXiv['created']
+        entry[:arxivupdated] = arXiv['updated']
         date = Date.parse(entry[:arxivupdated] || entry[:arxivcreated])
         entry[:year] = date.year
         entry[:month] = Literal.new(%w(jan feb mar apr may jun jul aug sep oct nov dec)[date.month - 1])
-        doi = xml.xpath('//arXiv/doi').map(&:content).first
-        entry[:doi] = doi if doi
-        journal = xml.xpath('//arXiv/journal-ref').map(&:content).first
-        entry[:journal] = journal if journal
-        comments = xml.xpath('//arXiv/comments').map(&:content).first
-        entry[:comments] = comments if comments
+        entry[:doi] = arXiv['doi'] if arXiv['doi']
+        entry[:journal] = arXiv['journal-ref'] if arXiv['journal-ref']
+        entry[:comments] = arXiv['comments'] if arXiv['comments']
         entry[:url] = "http://arxiv.org/abs/#{entry[:arxiv]}"
       rescue => ex
         entry.delete(:arxiv)
