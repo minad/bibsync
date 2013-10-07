@@ -33,6 +33,13 @@ module BibSync
 
           @bib.save
         end
+
+        # Add timestamp when this entry was added
+        @bib.to_a.each do |entry|
+          next if entry.comment?
+          entry[:added] ||= Date.today.to_s
+          @bib.save
+        end
       end
 
       private
@@ -102,15 +109,18 @@ module BibSync
 
         entry[:title] = xml.xpath('//arXiv/title').map(&:content).first
         entry[:abstract] = xml.xpath('//arXiv/abstract').map(&:content).first
-        entry[:primaryclass] = xml.xpath('//arXiv/categories').map(&:content).first.split(/\s+/).first
+        cats = xml.xpath('//arXiv/categories').map(&:content)
+        entry[:arxivcategories] = cats.join(',')
+        entry[:primaryclass] = cats.first.split(/\s+/).first
         entry[:author] = xml.xpath('//arXiv/authors/author').map do |author|
           "{#{author.xpath('keyname').map(&:content).first}}, {#{author.xpath('forenames').map(&:content).first}}"
         end.join(' and ')
         entry[:journal] = 'ArXiv e-prints'
         entry[:eprint] = entry[:arxiv]
         entry[:archiveprefix] = 'arXiv'
-        date = xml.xpath('//arXiv/updated').map(&:content).first || xml.xpath('//arXiv/created').map(&:content).first
-        date = Date.parse(date)
+        entry[:arxivcreated] = xml.xpath('//arXiv/created').map(&:content).first
+        entry[:arxivupdated] = xml.xpath('//arXiv/updated').map(&:content).first
+        date = Date.parse(entry[:arxivupdated] || entry[:arxivcreated])
         entry[:year] = date.year
         entry[:month] = Literal.new(%w(jan feb mar apr may jun jul aug sep oct nov dec)[date.month - 1])
         doi = xml.xpath('//arXiv/doi').map(&:content).first
