@@ -31,15 +31,9 @@ module BibSync
             update_aps_abstract(entry)
           end
 
-          @bib.save
-        end
-
-        # Add timestamp when this entry was added
-        @bib.to_a.each do |entry|
-          next if entry.comment?
+          # Add timestamp when this entry was added
           entry[:added] ||= Date.today.to_s
         end
-        @bib.save
       end
 
       private
@@ -109,8 +103,6 @@ module BibSync
           File.rename(file[:path], new_path)
           entry.file = new_path
         end
-
-        @bib.save
 
         entry
       end

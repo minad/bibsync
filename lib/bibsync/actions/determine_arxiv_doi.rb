@@ -18,8 +18,6 @@ module BibSync
                   (!@force && entry[:title] && entry[:author] && entry[:year])
 
           determine_arxiv_and_doi(entry)
-
-          @bib.save
         end
       end
 

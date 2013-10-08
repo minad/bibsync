@@ -83,14 +83,15 @@ module BibSync
 
     def process
       if @args.size != 0
-        error 'Too many arguments'
+        puts 'Too many arguments'
         puts @opts
         exit
       end
 
       if @options[:bib]
-        @options[:bib] = Bibliography.new(@options[:bib])
-        @options[:bib].save_hook = Transformer.new
+        bib = @options[:bib] = Bibliography.new(@options[:bib])
+        bib.save_hook = Transformer.new
+        at_exit { bib.save }
       end
 
       actions = []

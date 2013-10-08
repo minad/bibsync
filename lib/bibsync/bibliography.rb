@@ -55,8 +55,13 @@ module BibSync
       raise 'No filename given' unless @file
       if @dirty
         @save_hook.call(self) if @save_hook
-        File.open("#{@file}.tmp", 'w') {|f| f.write(self) }
-        File.rename("#{@file}.tmp", @file)
+        tmpfile = "#{@file}.tmp"
+        begin
+          File.open(tmpfile, 'w') {|f| f.write(self) }
+          File.rename(tmpfile, @file)
+        ensure
+          File.unlink(tmpfile) rescue nil
+        end
         @dirty = false
         true
       else

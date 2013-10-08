@@ -38,8 +38,6 @@ module BibSync
             warning("Cited in #{files} but not found in #{@bib.file}", key: key)
           end
         end
-
-        @bib.save
       end
     end
   end

@@ -32,8 +32,6 @@ module BibSync
           entry.type ||= :ARTICLE
           entry.file = file
         end
-
-        @bib.save
       end
     end
   end
