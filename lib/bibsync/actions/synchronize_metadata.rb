@@ -15,6 +15,8 @@ module BibSync
         @bib.to_a.each do |entry|
           next if entry.comment?
 
+          entry.delete(:abstract) if @force
+
           if @force || !(entry[:title] && entry[:author] && entry[:year])
             if entry[:arxiv]
               if entry.key == arxiv_id(entry, prefix: false, version: true)
@@ -27,7 +29,7 @@ module BibSync
             update_doi(entry) if entry[:doi]
           end
 
-          if entry[:doi] =~ /\A10\.1103\// && (@force || !entry[:abstract])
+          if entry[:doi] =~ /\A10\.1103\// && !entry[:abstract]
             update_aps_abstract(entry)
           end
 
