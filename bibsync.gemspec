@@ -18,7 +18,6 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = %w(lib)
 
-  s.add_runtime_dependency('multi_xml')
   s.add_runtime_dependency('faraday')
   s.add_runtime_dependency('faraday_middleware')
   s.add_development_dependency('rake')

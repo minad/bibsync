@@ -111,29 +111,29 @@ module BibSync
         info('Downloading arXiv metadata', key: entry)
 
         xml = fetch_xml('http://export.arxiv.org/oai2', verb: 'GetRecord', identifier: "oai:arXiv.org:#{arxiv_id(entry, prefix: true, version: false)}", metadataPrefix: 'arXiv')
-        error = find_key(xml, 'error')
-        raise error.first unless error.empty?
+        error = xml.elements['//error']
+        raise error.text if error
 
-        arXiv = find_key(xml, 'arXiv').first
+        arXiv = xml.elements['//arXiv']
 
-        entry[:title] = arXiv['title']
-        entry[:abstract] = arXiv['abstract']
-        entry[:arxivcategories] = arXiv['categories']
+        entry[:title] = arXiv.elements['title'].text
+        entry[:abstract] = arXiv.elements['abstract'].text
+        entry[:arxivcategories] = arXiv.elements['categories'].text
         entry[:primaryclass] = entry[:arxivcategories].split(/\s+/).first
-        entry[:author] = [arXiv['authors']['author']].flatten.map do |author|
-          "{#{author['keyname']}}, {#{author['forenames']}}"
+        entry[:author] = arXiv.get_elements('authors/author').map do |author|
+          "{#{author.elements['keyname'].text}}, {#{author.elements['forenames'].text}}"
         end.join(' and ')
         entry[:journal] = 'ArXiv e-prints'
         entry[:eprint] = entry[:arxiv]
         entry[:archiveprefix] = 'arXiv'
-        entry[:arxivcreated] = arXiv['created']
-        entry[:arxivupdated] = arXiv['updated']
+        entry[:arxivcreated] = arXiv.elements['created'].text if arXiv.elements['created']
+        entry[:arxivupdated] = arXiv.elements['updated'].text if arXiv.elements['updated']
         date = Date.parse(entry[:arxivupdated] || entry[:arxivcreated])
         entry[:year] = date.year
         entry[:month] = Literal.new(%w(jan feb mar apr may jun jul aug sep oct nov dec)[date.month - 1])
-        entry[:doi] = arXiv['doi'] if arXiv['doi']
-        entry[:journal] = arXiv['journal-ref'] if arXiv['journal-ref']
-        entry[:comments] = arXiv['comments'] if arXiv['comments']
+        entry[:doi] = arXiv.elements['doi'].text if arXiv.elements['doi']
+        entry[:journal] = arXiv.elements['journal-ref'].text if arXiv.elements['journal-ref']
+        entry[:comments] = arXiv.elements['comments'].text if arXiv.elements['comments']
         entry[:url] = "http://arxiv.org/abs/#{entry[:arxiv]}"
       rescue => ex
         entry.delete(:arxiv)

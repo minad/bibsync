@@ -17,8 +17,8 @@ module BibSync
         @bib.select {|e| e[:arxiv] }.each_slice(SliceSize) do |entry|
           begin
             xml = fetch_xml('http://export.arxiv.org/api/query', id_list: entry.map{|e| arxiv_id(e, version: false, prefix: true) }.join(','), max_results: SliceSize)
-            find_key(xml, 'entry').each_with_index do |e, i|
-              id = e['id'].gsub('http://arxiv.org/abs/', '')
+            xml.get_elements('//entry').each_with_index do |e, i|
+              id = e.elements['id'].text.gsub('http://arxiv.org/abs/', '')
               if id != entry[i][:arxiv]
                 info("#{entry[i][:arxiv]} replaced by http://arxiv.org/pdf/#{id}", key: entry[i])
                 arxiv_download(@dir, id) if @update

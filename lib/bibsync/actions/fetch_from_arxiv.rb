@@ -38,8 +38,8 @@ module BibSync
           arxivs.each_slice(SliceSize) do |ids|
             begin
               xml = fetch_xml('http://export.arxiv.org/api/query', id_list: ids.join(','), max_results: SliceSize)
-              find_key(xml, 'entry').each_with_index do |e, i|
-                id = e['id'].gsub('http://arxiv.org/abs/', '')
+              xml.each_element('//entry/id') do |id|
+                id = id.text.gsub('http://arxiv.org/abs/', '')
                 info 'arXiv download', key: id
                 arxiv_download(@dir, id)
               end
