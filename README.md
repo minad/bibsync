@@ -27,10 +27,20 @@ BibSync supports the following features:
 * Downloading of new versions of [arXiv](http://arxiv.org/) papers
 * Simple validation of [BibTeX](http://en.wikipedia.org/wiki/BibTeX) files (Checks for missing fields etc)
 * Simple transformation of [BibTeX](http://en.wikipedia.org/wiki/BibTeX) fields (Normalization of author, year and journal field...)
-* Works under every platform supporting Ruby (Linux, Windows, ...)
+* Works under every platform supporting Ruby and `pdftotext` (Linux, Windows, ...)
 
 Quick start
 -----------
+
+At first you have to ensure that you have the `pdftotext` program available on your `$PATH`. Under Debian you can install
+the package using `apt-get` as follows
+
+~~~
+$ apt-get install poppler-utils
+$ pdftotext
+pdftotext version 0.24.1
+...
+~~~
 
 BibSync requires Ruby >= 1.9.2 to run. It is distributed as a RubyGems package. You can install it via
 the command line
