@@ -9,9 +9,10 @@ Gem::Specification.new do |s|
   s.authors           = ['Daniel Mendler']
   s.email             = ['mail@daniel-mendler.de']
   s.summary           = 'BibSync is a tool to synchronize scientific papers and BibTeX bibliography files'
-  s.description       = 'BibSync is a tool to synchronize scientific papers and BibTeX bibliography files'
+  s.description       = 'BibSync is a tool to synchronize scientific papers and BibTeX bibliography files. It automatically downloads the metadata from dx.doi.org and arxiv.org.'
   s.homepage          = 'https://github.com/minad/bibsync'
   s.rubyforge_project = s.name
+  s.license           = 'MIT'
 
   s.files         = `git ls-files`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
