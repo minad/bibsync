@@ -114,6 +114,28 @@ describe BibSync::Bibliography do
   end
 
   describe '#save' do
+    it 'must support transform hook' do
+      begin
+        bib['NoShortJournal'][:shortjournal].must_equal nil
+        tmpfile = File.join(fixturedir, 'transform.bib')
+        bib.transform_hook = BibSync::Transformer.new
+        bib.save(tmpfile)
+        bib['NoShortJournal'][:shortjournal].must_equal 'PRL'
+      ensure
+        File.unlink(tmpfile) rescue nil
+      end
+    end
+
+    it 'must support format hook' do
+      begin
+        tmpfile = File.join(fixturedir, 'format.bib')
+        bib.format_hook = BibSync::JabRefFormatter.new
+        bib.save(tmpfile)
+        File.read(tmpfile).must_match(/created\s+with\s+JabRef/)
+      ensure
+        File.unlink(tmpfile) rescue nil
+      end
+    end
   end
 
   describe '#<<' do

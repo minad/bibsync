@@ -90,7 +90,8 @@ module BibSync
 
       if @options[:bib]
         bib = @options[:bib] = Bibliography.new(@options[:bib])
-        bib.save_hook = Transformer.new
+        bib.transform_hook = Transformer.new
+        bib.format_hook = JabRefFormatter.new if @options[:jabref]
         at_exit { bib.save }
       end
 
@@ -100,7 +101,6 @@ module BibSync
       actions << :SynchronizeFiles << :DetermineArXivDOI << :SynchronizeMetadata if @options[:sync] || @options[:resync]
       actions << :FindMyCitations if @options[:citedbyme]
       actions << :Validate if @options[:bib]
-      actions << :JabRefFormat if @options[:jabref]
 
       if actions.empty?
         puts "Please specify actions! See #{$0} --help"

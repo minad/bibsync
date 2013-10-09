@@ -4,12 +4,13 @@ module BibSync
     extend Forwardable
 
     attr_reader :file
-    attr_accessor :save_hook
+    attr_accessor :transform_hook, :format_hook
     def_delegators :@entries, :empty?, :size
     def_delegator :@entries, :each_value, :each
 
     def initialize(file = nil)
-      @entries, @save_hook = {}, nil
+      @entries = {}
+      @transform_hook, @format_hook = nil, nil
       load(file)
     end
 
@@ -54,10 +55,11 @@ module BibSync
 
       raise 'No filename given' unless @file
       if @dirty
-        @save_hook.call(self) if @save_hook
+        @transform_hook.call(self) if @transform_hook
         tmpfile = "#{@file}.tmp"
         begin
           File.open(tmpfile, 'w') {|f| f.write(self) }
+          @format_hook.call(tmpfile) if @format_hook
           File.rename(tmpfile, @file)
         ensure
           File.unlink(tmpfile) rescue nil
