@@ -34,6 +34,10 @@ module BibSync
         @options[:dir] = dir
       end
 
+      opts.on('-n', '--non-recursive', 'Don\'t scan recursively') do |dir|
+        @options[:non_recursive] = true
+      end
+
       opts.on('-v', '--check-versions', 'Check for updated arXiv papers') do
         @options[:check_versions] = true
       end
