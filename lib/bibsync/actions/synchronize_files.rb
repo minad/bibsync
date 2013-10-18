@@ -18,9 +18,13 @@ module BibSync
         files = {}
         Dir[File.join(@dir, "*.{#{FileTypes.join(',')}}")].sort.each do |file|
           name = File.basename(file)
-          key = name_without_ext(name)
-          raise "Duplicate file #{name}" if files[key]
-          files[key] = file
+          if name =~ /\A[\w\.\-]+\Z/
+            key = name_without_ext(name)
+            raise "Duplicate file #{name}" if files[key]
+            files[key] = file
+          else
+            warning('File with invalid name', key: name)
+          end
         end
 
         files.each do |key, file|
