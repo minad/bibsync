@@ -1,6 +1,9 @@
 BibSync
 =======
 
+[![Gittip donate button](http://img.shields.io/gittip/bevry.png)](https://www.gittip.com/min4d/ "Donate weekly to this project using Gittip")
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=min4d&url=https://github.com/minad/bibsync&title=BibSync&language=&tags=github&category=software)
+
 BibSync is a tool to synchronize your paper database with a [BibTeX](http://en.wikipedia.org/wiki/BibTeX) file which might be most
 useful for Physicists and Mathematicians since it supports synchronization with [DOI](http://dx.doi.org/) and [arXiv](http://arxiv.org/).
 
