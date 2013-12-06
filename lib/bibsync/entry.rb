@@ -105,7 +105,7 @@ module BibSync
           case text
           when /\A(\s+|%[^\n]+\n)/
             text = $'
-          when /\A\s*(\w+)\s*=\s*/
+          when /\A\s*([\w-]+)\s*=\s*/
             text, key = $', $1
             if text =~ /\A\{/
               text, self[key] = parse_field(text)
