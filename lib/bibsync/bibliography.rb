@@ -86,13 +86,14 @@ module BibSync
     end
 
     def parse(text)
+      lines = text.count("\n")
       until text.empty?
         case text
         when /\A(\s+|%[^\n]+\n)/
           text = $'
         else
           entry = Entry.new
-          text = entry.parse(text)
+          text = entry.parse(text, lines)
           entry.key ||= "entry#{@entries.size}" # Number of entries for comment id
           self << entry
         end

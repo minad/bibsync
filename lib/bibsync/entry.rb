@@ -89,15 +89,16 @@ module BibSync
       s << "}\n"
     end
 
-    def parse(text)
-      raise 'Unexpected token' if text !~ /\A\s*@(\w+)\s*\{/
+    def parse(text, lines = nil)
+      lines ||= text.count("\n")
+      error('Unexpected token', text, lines) if text !~ /\A\s*@(\w+)\s*\{/
       self.type = $1
       text = $'
 
       if comment?
-        text, self[:comment] = parse_field(text)
+        text, self[:comment] = parse_field(text, lines)
       else
-        raise 'Expected entry key' if text !~ /([^,]+),\s*/
+        error('Expected entry key', text, lines) if text !~ /([^,]+),\s*/
         self.key = $1.strip
         text = $'
 
@@ -108,9 +109,9 @@ module BibSync
           when /\A\s*([\w-]+)\s*=\s*/
             text, key = $', $1
             if text =~ /\A\{/
-              text, self[key] = parse_field(text)
+              text, self[key] = parse_field(text, lines)
             else
-              text, value = parse_field(text)
+              text, value = parse_field(text, lines)
               self[key] = Literal.new(value)
             end
           else
@@ -119,13 +120,13 @@ module BibSync
         end
       end
 
-      raise 'Expected closing }' unless text =~ /\A\s*\}/
+      error('Expected closing }', text, lines) unless text =~ /\A\s*\}/
       $'
     end
 
     private
 
-    def parse_field(text)
+    def parse_field(text, lines)
       value = ''
       count = 0
       until text.empty?
@@ -151,9 +152,13 @@ module BibSync
         end
       end
 
-      raise 'Expected closing }' if count != 0
+      error('Expected closing }', text, lines) if count != 0
 
       return text, value
+    end
+
+    def error(message, text, lines)
+      raise "#{message} at line #{lines - text.count("\n") + 1}"
     end
 
     def convert_key(key)
