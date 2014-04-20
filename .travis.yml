@@ -5,7 +5,7 @@ rvm:
   - 2.1.0
   - ruby-head
   - jruby-19mode
-  - rbx-19mode
+  - rbx
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq poppler-utils jabref
